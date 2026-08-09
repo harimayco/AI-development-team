@@ -516,6 +516,7 @@ See [`CHANGELOG.md`](CHANGELOG.md) for full details.
 
 | Version | Date | Changes |
 |---------|------|---------|
+| 5.3.0 | 2026-08-09 | **Language skills** — Rust, SQL (Postgres/MySQL/Oracle/SQLite), Java, TypeScript as auto-loading knowledge skills with reviewer passes; `/arch` design-for-predictability deliverables (contract sheets, state tables, FMEA, test-case-first); CI runs the framework gates on every PR |
 | 5.2.0 | 2026-08-03 | **Plugin distribution** (`claude/` is the plugin root; SHA is the version); `ai-dev-team` contract skill + `pull-request` skill; `/kai` re-based on human-approved rules from any backend; `/retro` removed; `/sm` re-scope wired to its triggers; root `AGENTS.md` untracked |
 | 5.1.0 | 2026-06-14 | Reference libraries (ai-engineer, architect, data/mlops/dba); /tw + /mlops wired up; roster reconciled to core 15; knowledge-backend naming generalized; DART dashboard + RAG subsystem + migration scripts removed |
 | 5.0.0 | 2026-06-06 | **OSS-first release** — proportional workflow engine, 48→29 roster, universal multi-editor installer, pluggable adapters |
