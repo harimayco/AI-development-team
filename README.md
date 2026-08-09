@@ -2,7 +2,7 @@
 
 ![Claude Code](https://img.shields.io/badge/Claude%20Code-ready-6E56CF) ![Cursor](https://img.shields.io/badge/Cursor-ready-111111) ![Kiro](https://img.shields.io/badge/Kiro-ready-9B59B6) ![VS Code](https://img.shields.io/badge/VS%20Code-ready-007ACC) ![License: MIT](https://img.shields.io/badge/License-MIT-green) ![Stars](https://img.shields.io/github/stars/olehsvyrydov/AI-development-team?style=social)
 
-> **A reusable AI agent-team framework for your editor.** 38 agent skills (a 15-agent core team + optional specialists + cross-cutting process skills) plus a `workflow-engine` and an **enforced, proportional workflow** with approval gates — *process, not prompts*. Installs as a **Claude Code plugin**, or via the universal installer for Cursor, Kiro & VS Code. Open-source, no lock-in, free by default.
+> **A reusable AI agent-team framework for your editor.** 40 agent skills (a 15-agent core team + optional specialists + auto-loading language skills + cross-cutting process skills) plus a `workflow-engine` and an **enforced, proportional workflow** with approval gates — *process, not prompts*. Installs as a **Claude Code plugin**, or via the universal installer for Cursor, Kiro & VS Code. Open-source, no lock-in, free by default.
 
 ```
 /po → /arch → /secops → [/fin] → [/legal] → [/ui] → /fe | /be → /rev → /qa + /e2e → /verify
@@ -10,7 +10,7 @@
 
 The framework is a portable agent layer you install once and use across every project. It ships four things:
 
-- **Agent skills** (`claude/skills/`) — lean `SKILL.md` personas that load deep `references/` on demand; tech stacks (React/Angular/Vue, Java/Kotlin/Python/PHP, …) are references the role *self-routes* to, not separate agents.
+- **Agent skills** (`claude/skills/`) — lean `SKILL.md` personas that load deep `references/` on demand; tech stacks (React/Angular/Vue, Java/Kotlin/Python/PHP, …) are references the role *self-routes* to, not separate agents. Core languages (Rust; SQL with Postgres/MySQL/Oracle/SQLite branches) are the deliberate exception: knowledge skills in `skills/development/languages/` that **auto-load from context** whenever that language is written or reviewed — no persona, no command.
 - **The `workflow-engine`** — a skill that classifies each change and **refuses** to skip a required gate.
 - **`workflow.yaml`** — a versioned workflow definition, right-sized to the change via `solo` → `small-team` → `regulated` presets.
 - **Distribution** — a Claude Code **plugin** (declare it once per project; the commit SHA is the version, so every push is an update), or **`install.sh`**, which wires the skills, commands and templates into whichever editor(s) you use.
@@ -185,12 +185,13 @@ generated at the destination:
 ├── CLAUDE.md                    # generated pointer (TDD workflow, approval gates)
 ├── TEAM_WORKFLOW.md             # Complete team process documentation
 │
-├── skills/                      # 38 agent skill files (15 core + specialists + process skills)
+├── skills/                      # 40 agent skill files (15 core + specialists + language + process skills)
 │   ├── management/              # Product Owner, Scrum Master, Business Analyst
 │   ├── architecture/            # Solution Architect, GraphQL Developer
 │   ├── development/
 │   │   ├── backend/             # Java/Spring, Kotlin, PHP/Laravel, Python/FastAPI
 │   │   ├── frontend/            # React/Next.js, Angular, Vue, Flutter
+│   │   ├── languages/           # Rust, SQL (auto-loading knowledge skills, no persona)
 │   │   └── mobile/              # Native iOS/Android
 │   ├── quality/
 │   │   ├── review/              # Full-stack, Backend, Frontend, PHP reviewers
@@ -442,37 +443,39 @@ invent them.
 
 1. Create a skill directory under the appropriate category:
    ```
-   claude/skills/development/backend/rust/rust-developer/SKILL.md
+   claude/skills/development/backend/go/go-developer/SKILL.md
    ```
 
 2. Follow the SKILL.md format (YAML frontmatter + structured Markdown sections):
    ```yaml
    ---
-   name: rust-developer
-   description: "Senior Rust Developer with 8+ years systems programming experience"
+   name: go-developer
+   description: "Senior Go Developer with 8+ years systems programming experience"
    ---
 
-   # Rust Developer
+   # Go Developer
 
    ## Trigger
-   Use when working with Rust code, systems programming, or performance-critical services.
+   Use when working with Go code, services, or CLI tooling.
 
    ## Context
-   You are a Senior Rust Developer...
+   You are a Senior Go Developer...
 
    ## Expertise
-   ### Rust 2024 Edition
-   - Ownership, borrowing, lifetimes
+   ### Modern Go
+   - Goroutines, channels, context propagation
    ...
 
    ## Anti-Patterns
-   - Never use `unwrap()` in production code
+   - Never discard a returned error
    ...
    ```
 
-3. Create a slash command in `claude/commands/rust.md`
+3. Create a slash command in `claude/commands/go.md`
 
 4. Re-install / update: `./install.sh` (idempotent)
+
+For a core **language** rather than a role, use the knowledge-skill pattern instead — see `claude/skills/development/languages/` (Rust, SQL): no persona, no command; the frontmatter description auto-triggers from context and the role agents route into it. The recipe is in `CONTRIBUTING.md` under "Add a language skill".
 
 See: [Skill Extension Guide](docs/skill-extension-guide.md)
 
