@@ -5,6 +5,8 @@ The roster is a **15-agent core team + optional specialists** (see `commands/age
 **Technology stacks are NOT separate agents.** The role agent detects the stack and loads the matching reference — so this matrix is about *roles*, not stacks:
 `Angular/Vue/Flutter/JavaFX → /fe` · `Kotlin/FastAPI/Laravel/Quarkus/Kafka/HMRC → /be` · `GraphQL → /arch` · `Terraform → /devops` · `Cucumber/BDD → /e2e` · `language reviewers → /rev` · `UK law/tax → /legal, /fin`.
 
+The deliberate exception: **core languages are knowledge skills**, not references — Rust and SQL (Postgres/MySQL/Oracle/SQLite dialect branches) live in `skills/development/languages/` and **auto-load from context** whenever that language is written or reviewed. They carry no persona and no command; `/be`, `/dba`, `/rev` and `/arch` route into them rather than duplicating them.
+
 ## By task → agent
 
 | If the task is primarily about… | Use | Not |

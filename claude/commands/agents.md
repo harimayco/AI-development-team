@@ -4,7 +4,7 @@ description: List all available AI Development Team agents and their specializat
 
 # AI Development Team — Agent Directory
 
-> **Two-tier roster.** A **core team** (15) you'll use on most work, plus **optional specialists** loaded when a task needs them. **Technology stacks are not separate agents** — a role agent (e.g. `/be`) detects the project's stack and loads the matching `references/<stack>.md`. So "build a FastAPI endpoint" still routes to `/be`.
+> **Two-tier roster.** A **core team** (15) you'll use on most work, plus **optional specialists** loaded when a task needs them. **Technology stacks are not separate agents** — a role agent (e.g. `/be`) detects the project's stack and loads the matching `references/<stack>.md`. So "build a FastAPI endpoint" still routes to `/be`. The exception: **core languages** (Rust; SQL with dialect branches) are knowledge skills under `skills/development/languages/` that auto-load from context — no persona, no command.
 >
 > **Naming:** role commands (`/arch`, `/be`, `/fe`) are standard; persona aliases (`/jorge`, `/james`, `/finn`) invoke the same agent.
 
@@ -18,8 +18,8 @@ description: List all available AI Development Team agents and their specializat
 | `/arch` | `/jorge` | Jorge | Solution Architect (**MANDATORY** gate) | GraphQL |
 | `/secops` | `/soren` | Soren | Security Engineer (**MANDATORY** gate) | — |
 | `/fe` | `/finn` | Finn | Frontend Developer | React/Next (default), Angular, Vue, Flutter, JavaFX desktop |
-| `/be` | `/james` | James | Backend Developer | Java/Spring (default), Kotlin, Python/FastAPI, PHP/Laravel, Quarkus, Kafka, HMRC MTD |
-| `/rev` | — | Rev | Code Reviewer | backend (Java/Kotlin), frontend (TS/React), PHP |
+| `/be` | `/james` | James | Backend Developer | Java/Spring (default), Kotlin, Python/FastAPI, PHP/Laravel, Quarkus, Kafka, HMRC MTD, Rust (via the `rust` language skill) |
+| `/rev` | — | Rev | Code Reviewer | backend (Java/Kotlin), frontend (TS/React), PHP, Rust & SQL (via the language skills) |
 | `/qa` | `/rob` | Rob | Test Designer — test cases, BDD specs | — |
 | `/e2e` | `/adam` | Adam | E2E Automation — Playwright | Cucumber/BDD |
 | `/ui` | `/aura` | Aura | UI/UX Designer — design systems | JavaFX desktop design |
@@ -48,7 +48,7 @@ These are process skills rather than roles. They are picked up automatically fro
 |---|---|---|
 | `/ai` | ai-engineer | LLM product features: RAG, agents, prompts, evals, guardrails |
 | `/data` | data-engineer | Analytics pipelines: ETL/ELT, dbt, warehouse, streaming |
-| `/dba` | dba | OLTP databases: schema, indexing, query tuning, migrations |
+| `/dba` | dba | OLTP databases: schema, indexing, query tuning, migrations (dialect depth via the `sql` language skill) |
 | `/sre` | sre-engineer | Reliability: SLOs, observability, incidents (owns `RELIABILITY_OK`) |
 | — | mlops-engineer | ML/inference infra: model serving, pipelines, cost |
 | `/ux` | ux-researcher | User research: interviews, usability, IA, personas |
@@ -61,7 +61,7 @@ These are process skills rather than roles. They are picked up automatically fro
 | — | backend-tester | Backend unit/integration TDD (JUnit, Testcontainers) |
 | — | frontend-tester | Frontend unit/integration (Vitest, RTL) |
 
-## Stacks & specializations live as references (not agents)
+## Stacks & specializations live as references or language skills (not command agents)
 
 Folded into their parent role's `references/` — the role agent self-routes to them:
 
@@ -76,6 +76,8 @@ Folded into their parent role's `references/` — the role agent self-routes to 
 | `/ui` | `javafx-design/` |
 | `/legal` | `uk/` |
 | `/fin` | `uk/`, `uk-self-employment.md` |
+
+**Language skills (auto-load from context):** `skills/development/languages/` — `rust/` and `sql/` (Postgres, MySQL, Oracle, SQLite branches). No persona, no command; their descriptions trigger whenever that language is written or reviewed, and `/be`, `/dba`, `/rev`, `/arch` route into them.
 
 ## Additional Commands
 

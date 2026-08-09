@@ -23,6 +23,19 @@ Consult the **`workflow-engine`** skill first.
 - **Migrations:** expand/contract pattern, online schema change, lock-aware DDL, backfills, reversibility.
 - **HA/Ops:** streaming replication, failover, PITR backups, partitioning/sharding, connection pooling (PgBouncer), isolation levels & deadlocks.
 
+## Dialect depth (read first)
+
+Query-language and migration depth lives in the **sql** language skill (`../../../languages/sql/SKILL.md` — it auto-loads whenever SQL is written); load the engine's reference for dialect work:
+
+| Engine | Detect | Load |
+|---|---|---|
+| Postgres | postgres driver/DSN, plpgsql | `../../../languages/sql/references/postgres.md` |
+| MySQL | mysql/mariadb driver, InnoDB | `../../../languages/sql/references/mysql.md` |
+| Oracle | oracle driver, PL/SQL | `../../../languages/sql/references/oracle.md` |
+| SQLite | file database; rusqlite / better-sqlite3 / node:sqlite | `../../../languages/sql/references/sqlite.md` |
+
+Migration safety and SQL review across engines: the sql skill's core standards and `../../../languages/sql/references/sql-review.md`. Vector index tuning stays here: `references/vector-db-tuning.md`.
+
 ## Standards
 - Migrations are **reversible and lock-aware**; large-table changes use expand/contract, never a blocking `ALTER`.
 - Every index has a **justification** (query it serves); unused indexes are removed.
