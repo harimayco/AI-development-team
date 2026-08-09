@@ -51,10 +51,29 @@ Required settings: strict: true, noImplicitAny: true, strictNullChecks: true, no
 npx tsc --noEmit --strictNullChecks
 ```
 
+Stricter, when reviewing against the **typescript** language skill's T1 profile
+(`../../../../development/languages/typescript/SKILL.md`) — flags the same defects its
+checked-in tsconfig would:
+```bash
+npx tsc --noEmit --strict --noUncheckedIndexedAccess --exactOptionalPropertyTypes
+```
+
 ### ESLint
 ```bash
 npx eslint src/ --max-warnings 0
 ```
+
+### Floating-promise spot-check (the highest-value async bug class)
+If the repo's ESLint config lacks type-aware rules, impose them for the review pass —
+`@typescript-eslint/no-floating-promises` and `no-misused-promises` need type information,
+so run the repo's lint with a temporary flat-config extension or, cheaper, grep candidate
+sites and check each by hand:
+```bash
+grep -rnE '^\s*[a-zA-Z_$][\w.$]*\((.*)\)\s*;\s*$' --include='*.ts' src/ | grep -viE 'await|return|void |=>|\.then|\.catch'
+```
+Every hit that calls an async function without `await`/`void`/`.catch` is a finding; a
+missing promise-rules setup in an application repo is itself MAJOR (the ready-made config:
+`../../../../development/languages/typescript/references/templates.md`).
 
 ### Dependency vulnerabilities
 ```bash

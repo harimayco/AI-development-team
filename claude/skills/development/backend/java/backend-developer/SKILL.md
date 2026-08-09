@@ -75,7 +75,7 @@ Use WebSearch and WebFetch tools to:
 
 | Stack | Detect | Load |
 |---|---|---|
-| **Java / Spring Boot** (default) | `pom.xml`/`build.gradle` + Spring | `references/java-expertise.md` (+ `templates.md`, `external-api.md`) |
+| **Java / Spring Boot** (default) | `pom.xml`/`build.gradle` + Spring | `references/java-expertise.md` — Spring/backend ecosystem + Spring Boot 4 standards S1–S10 (+ `templates.md`, `external-api.md`); language-level Java standards auto-load from the **java** language skill — `../../../languages/java/SKILL.md` |
 | **Kotlin** | Kotlin sources, `build.gradle.kts` | `references/kotlin.md` |
 | **Python / FastAPI** | `pyproject.toml`/`requirements.txt`, FastAPI | `references/fastapi.md` |
 | **PHP / Laravel** | `composer.json`, Laravel | `references/laravel.md` |
@@ -89,7 +89,7 @@ If ambiguous, ask; otherwise default to Java/Spring Boot.
 ## Deep-dive references (load on demand)
 
 Detailed backend knowledge lives in `references/` — read the relevant file when the task calls for it:
-- `references/java-expertise.md` — Spring Boot/WebFlux, Java, REST APIs, persistence (JPA/R2DBC), business logic, security, testing (the ~510-line Expertise block).
+- `references/java-expertise.md` — the Spring/backend ecosystem: Spring Boot 4 standards (S1–S10), Spring/WebFlux, REST APIs, persistence (JPA/R2DBC), protocols, messaging, observability, build tools. Language-level Java standards (records/sealed modelling, JSpecify + NullAway, concurrency doctrine, testing, boundary security) auto-load from the **java** language skill (`../../../languages/java/SKILL.md`).
 - `references/templates.md` — controller, hexagonal-architecture, saga-orchestrator, and test templates.
 - `references/external-api.md` — external API integration best practices.
 - `references/kotlin.md` — Kotlin (coroutines, Ktor, KMP) — the full Kotlin playbook.
@@ -287,7 +287,7 @@ public Result process(Request r) { return doProcess(r); }
 
 **AOP is for genuine cross-cutting concerns ONLY.** Never push domain/business logic into an aspect — least of all the logic that is the *meaningful difference* between two code paths (e.g. an experiment's independent variable, a branch-specific rule). That logic belongs in explicit, readable code where a reader can see it; hiding it in a pointcut makes the real behaviour invisible at the call site. Aspects supply instrumentation, not decisions.
 
-> Java-specific micro-standards (instance vs `static` on a bean, cached regex `Pattern`s, seeded reproducible RNG) live in `references/java-expertise.md`.
+> Java-specific micro-standards (instance vs `static` on a bean, cached regex `Pattern`s, seeded reproducible RNG) live in the **java** language skill (`../../../languages/java/SKILL.md`), which auto-loads whenever Java is written.
 
 ### API Design
 - RESTful conventions (nouns, not verbs)
@@ -405,8 +405,8 @@ public String computeFileHash(Path file) {
 | **Hardcoded Config** | Magic numbers/strings in code | `@ConfigurationProperties`, environment variables |
 | **Catching Generic Exception** | `catch (Exception e)` | Catch specific exceptions, handle appropriately |
 | **Ignoring Backpressure** | Unbounded reactive streams | `limitRate()`, `onBackpressureBuffer()` |
-| **ThreadLocal in Virtual Threads** | Memory leaks, wrong context | Use `ScopedValue` instead |
-| **Synchronized I/O** | Pins virtual thread to carrier | Use `ReentrantLock` for I/O guards |
+| **ThreadLocal in Virtual Threads** | Memory leaks, wrong context | Use `ScopedValue` (final since Java 25) instead |
+| **Synchronized I/O** (pre-JDK-24 runtimes only) | Pinned the virtual thread to its carrier before JDK 24; JEP 491 removed this — pinning now remains only for native frames and class initializers | On JDK 24+ `synchronized` is fine; `ReentrantLock` only on older runtimes or for its richer API |
 | **Premature Optimization** | Complex code without evidence | Profile first, optimize bottlenecks only |
 | **Missing Circuit Breaker** | Cascade failures in distributed system | Resilience4j on external calls |
 | **No Idempotency** | Duplicate processing on retry | Idempotency keys, `INSERT ... ON CONFLICT` |
@@ -414,7 +414,7 @@ public String computeFileHash(Path file) {
 | **Obvious Comments** | Noise, outdated quickly | Self-documenting names, Javadoc for APIs only |
 | **Raw Strings for External IDs** | Type confusion, wrong ID format | Use value objects (e.g., `HmrcBusinessId`) |
 | **Mocking Repositories in Integration Tests** | Misses real DB behavior | Test actual implementations with Testcontainers |
-| **ThreadLocal for Parser State** | Memory leaks, wrong context in virtual threads, testing complexity | Pass state as method parameters or use ScopedValue |
+| **ThreadLocal for Parser State** | Memory leaks, testing complexity, costly at virtual-thread scale | Pass state as method parameters or use `ScopedValue` (final since Java 25) |
 | **Silent Null Returns in Audit Functions** | Data integrity loss goes undetected | Throw exception or log WARN for audit-critical functions (hashing, timestamping, retention) |
 | **Unaudited Queries After Schema Change** | Queries miss new filter dimensions (e.g., soft-delete) | After any schema change adding a filter, grep all queries on the affected table |
 | **Implementing Filters Without Enumeration** | Missing exclusion criteria discovered in review/QA | Enumerate ALL filter/exclusion criteria as a checklist before writing any matching logic |

@@ -1,79 +1,41 @@
-# Backend — Java/Spring Expertise (WebFlux · REST · JPA/R2DBC · security · testing)
+# Backend Stack — Java / Spring Ecosystem
 
-## Expertise
+> **Language-level Java standards live in the java language skill** (`../../../../languages/java/SKILL.md`), which auto-loads whenever Java is written:
+> records/sealed modelling, JSpecify + NullAway, immutability, virtual-thread and concurrency doctrine, JUnit/ArchUnit/PIT testing, boundary security.
+> THIS file carries the Spring/backend ecosystem — framework, persistence, protocols, serialization, messaging, observability, build tooling —
+> and the numbered **Spring Boot 4 standards (S1–S10)** below.
 
-### Java 25 (September 2025)
+## Spring Boot 4 standards (S1–S10)
 
-#### Key Language Features
-- **Records** — immutable DTOs, compact constructors, local records
-- **Sealed Classes** — exhaustive pattern matching with `permits`
-- **Pattern Matching** — `instanceof`, `switch` expressions, record patterns, unnamed patterns (`_`)
-- **Text Blocks** — multiline strings with `"""`, `\s` escapes
-- **Scoped Values (JEP 506)** — immutable, inheritable, thread-safe alternative to ThreadLocal
-- **Structured Concurrency (JEP 505)** — treat groups of related tasks as a single unit of work
-- **Module Import Declarations (JEP 511)** — `import module java.base` for concise imports
-- **Compact Object Headers (JEP 519)** — reduced object header from 96-128 bits to 64 bits
-- **Ahead-of-Time Compilation** — class loading/linking AOT for faster startup
-- **Foreign Function & Memory API** — safe native code interop without JNI
-- **JSpecify Null Safety Annotations** — `@Nullable`, `@NonNull` for compile-time null safety
+Numbered so reviews and tickets can cite them. Violations are BLOCKING at review, the same way the language skill's J-standards are.
 
-#### Virtual Threads (Project Loom) — CRITICAL KNOWLEDGE
+**S1 — Target Spring Boot 4.1.x.** 4.1.0 went GA in June 2026 and OSS support for the 4.0 line ends December 2026 — new work starts on 4.1. The baseline is Spring Framework 7, Spring Security 7, Jakarta EE 11, and Jackson 3; Jackson 3's new package and artifact coordinates (`tools.jackson.*` — only the annotations stay at `com.fasterxml.jackson.annotation`) need a deliberate migration pass, not just a version bump.
 
-Virtual threads are lightweight threads managed by the JVM. They enable writing simple blocking code that scales to millions of concurrent tasks.
+**S2 — Constructor injection only.** No field `@Autowired`; every dependency is a `final` constructor parameter. A bean whose constructor takes too many parameters is a design smell to fix by splitting the class — not a builder candidate.
 
-**When to use:**
-- I/O-bound workloads (HTTP calls, database queries, file I/O)
-- High-concurrency servers handling many simultaneous requests
-- Replacing reactive code when simplicity is preferred
+**S3 — Typed, validated configuration.** Bind config into `@ConfigurationProperties` records with `@Validated`, never scattered `@Value` strings. The application fails startup on invalid config instead of limping to a runtime error.
 
-**When NOT to use:**
-- CPU-bound computation (use platform threads or ForkJoinPool)
-- Tasks requiring thread-local mutable state (use ScopedValue instead)
-- Code using `synchronized` blocks that guard I/O (use ReentrantLock)
+**S4 — Outbound HTTP via `RestClient` or declarative `@HttpExchange` interfaces.** `RestTemplate` is prohibited in new code. Every client declares explicit connect/read timeouts and maps error statuses at the boundary — no default-timeout clients, no raw 4xx/5xx leaking into the domain.
 
-**Best Practices:**
-1. **Use ScopedValue over ThreadLocal** — ThreadLocal is mutable and per-thread; ScopedValue is immutable and inherited by child virtual threads
-2. **Avoid `synchronized` for I/O-guarded code** — `synchronized` pins the virtual thread to its carrier; use `ReentrantLock` instead
-3. **Use Structured Concurrency** — `StructuredTaskScope` ensures child tasks complete before parent returns
-4. **Don't pool virtual threads** — creating is cheap; use `Executors.newVirtualThreadPerTaskExecutor()`
-5. **Set `spring.threads.virtual.enabled=true`** in Spring Boot for auto virtual thread executor
-6. **Monitor with `-Djdk.tracePinnedThreads=full`** to detect thread pinning during development
-7. **Combine with Structured Concurrency** for fan-out/fan-in patterns
+**S5 — One error contract.** RFC 9457 `ProblemDetail` everywhere; no ad-hoc error JSON shapes per controller.
 
-```java
-// Structured Concurrency with Scoped Values
-private static final ScopedValue<UserContext> CONTEXT = ScopedValue.newInstance();
+**S6 — API versioning via Framework 7's built-in mechanism** — `@ApiVersion` plus a configured version resolution strategy — not hand-rolled URL surgery or bespoke header parsing.
 
-void handleRequest(UserContext ctx) throws Exception {
-    ScopedValue.runWhere(CONTEXT, ctx, () -> {
-        try (var scope = StructuredTaskScope.ShutdownOnFailure()) {
-            Subtask<Profile> profile = scope.fork(() -> fetchProfile(CONTEXT.get().userId()));
-            Subtask<Orders> orders = scope.fork(() -> fetchOrders(CONTEXT.get().userId()));
-            scope.join().throwIfFailed();
-            return new UserData(profile.get(), orders.get());
-        }
-    });
-}
-```
+**S7 — Slice tests first.** `@WebMvcTest` / `@DataJpaTest` / the other slices carry the behaviour tests; `@SpringBootTest` exists to prove wiring, not to run the suite. Mock Spring beans with `@MockitoBean` — the Boot 4 replacement for the removed `@MockBean`.
 
-#### Concurrent Programming Deep Knowledge
+**S8 — Observability via Micrometer `@Observed` and the OpenTelemetry starter.** No hand-rolled instrumentation inside business methods — the aspect supplies the telemetry and the method stays business logic, the same rule as the AOP standard in `../SKILL.md`.
 
-| Concept | Tool | When |
-|---------|------|------|
-| Thread-safe collections | `ConcurrentHashMap`, `CopyOnWriteArrayList` | Shared mutable state |
-| Atomic operations | `AtomicReference`, `VarHandle`, `LongAdder` | Lock-free updates |
-| Locks | `ReentrantLock`, `StampedLock`, `ReadWriteLock` | Fine-grained locking |
-| Synchronizers | `CountDownLatch`, `Semaphore`, `Phaser`, `CyclicBarrier` | Thread coordination |
-| Executors | `newVirtualThreadPerTaskExecutor()`, `ForkJoinPool` | Task scheduling |
-| CompletableFuture | `thenApply`, `thenCompose`, `allOf`, `anyOf` | Async composition |
-| Structured Concurrency | `StructuredTaskScope` | Parent-child task lifecycle |
-| Scoped Values | `ScopedValue.runWhere()` | Request context propagation |
+**S9 — Application code is `@NullMarked`.** Spring Framework 7's APIs are JSpecify-annotated; marking your own packages lets the language skill's NullAway gate check the whole call chain instead of stopping at the framework boundary.
+
+**S10 — Security 7 idioms only.** Lambda-style `SecurityFilterChain` beans; passkeys/WebAuthn and MFA are first-class options to reach for. No `WebSecurityConfigurerAdapter`-era patterns.
 
 ---
 
+## Expertise
+
 ### Spring Ecosystem
 
-#### Spring Boot 4.0+ / Spring Framework 7.0+
+#### Spring Boot 4 / Spring Framework 7
 
 **New in Spring Framework 7 / Spring Boot 4:**
 - **Jakarta EE 11** baseline (Servlet 6.1, JPA 3.2)
@@ -87,6 +49,8 @@ void handleRequest(UserContext ctx) throws Exception {
 - **Declarative HTTP Clients** — `@HttpExchange` interface-based clients
 - **RestClient** — synchronous HTTP client replacing RestTemplate
 - **Spring Modulith** — modular monolith support with event-driven boundaries
+
+**Virtual threads on the Spring side:** `spring.threads.virtual.enabled=true` runs MVC request handling, `@Async`, and Boot's task executors on virtual threads (the thread and concurrency doctrine itself lives in the java language skill).
 
 #### Spring WebFlux (Reactive Stack)
 - **Project Reactor** — `Mono`, `Flux`, operators, error handling
@@ -470,26 +434,13 @@ Table: outbox (id, aggregate_type, aggregate_id, event_type, payload, created_at
 
 ---
 
-### Testing — Expert Knowledge (TDD Mandatory)
-
-#### Test Pyramid
-```
-    /  E2E  \        ← Few: Critical paths only (/e2e writes these)
-   /Integration\     ← Moderate: API contracts, DB queries (developer writes)
-  /    Unit     \    ← Many: Business logic, pure functions (developer writes)
-```
-
-#### Unit Testing
-- **JUnit 6 (Jupiter)**: `@Test`, `@ParameterizedTest`, `@Nested`, `@DisplayName`
-- **Mockito 5**: `@Mock`, `@InjectMocks`, `@MockitoBean` (Spring Boot 4), `BDDMockito`
-- **AssertJ**: Fluent assertions, `assertThat().extracting()`, `assertThatThrownBy()`
-- **Test Organization**: Given-When-Then structure, one assertion concept per test
+### Testing — Spring stack
 
 #### Integration Testing
 - **Spring Test Slices**: `@WebMvcTest`, `@WebFluxTest`, `@DataJpaTest`, `@DataR2dbcTest`, `@DataMongoTest`
-- **Testcontainers**: `@Testcontainers`, `@Container`, `@ServiceConnection` (Spring Boot 3.1+)
+- **Testcontainers**: `@Testcontainers`, `@Container`, `@ServiceConnection`
 - **WireMock**: HTTP API stubbing, `@WireMockTest`, verification, record-playback
-- **`@SpringBootTest`**: Full context with `WebEnvironment.RANDOM_PORT`
+- **`@SpringBootTest`**: Full context with `WebEnvironment.RANDOM_PORT` — wiring only (S7)
 - **Test Configuration**: `@TestConfiguration`, `@Import`, test property overrides
 
 #### Reactive Testing
@@ -501,13 +452,10 @@ Table: outbox (id, aggregate_type, aggregate_id, event_type, payload, created_at
 - **Spring Cloud Contract**: Producer-driven contracts, stub generation
 - **Pact**: Consumer-driven contract testing
 
-#### Test Best Practices
-1. **Test naming**: `should_[expected]_when_[condition]` or descriptive `@DisplayName`
-2. **Test data**: Builders/factories, `@ParameterizedTest` for variations
-3. **No test interdependence**: Each test is isolated and repeatable
-4. **WireMock stubs in `src/test/resources/wiremock/`** for shared API mocking
-5. **Testcontainers with `@ServiceConnection`** for zero-config database tests
-6. **`@MockitoBean`** (Spring Boot 4) instead of deprecated `@MockBean`
+#### Spring Test Practices
+1. **WireMock stubs in `src/test/resources/wiremock/`** for shared API mocking
+2. **Testcontainers with `@ServiceConnection`** for zero-config database tests
+3. **`@MockitoBean`** (Spring Boot 4) instead of the removed `@MockBean`
 
 ---
 
@@ -527,37 +475,4 @@ Audit-critical writes should **fail loud** (throw if a load-bearing audit/event 
 
 - **Never throw out of the core evaluation for an advisory write.** Catch + log; the primary result must still return. (Don't copy the fail-loud audit rule onto a telemetry path.)
 - **Skip rather than fabricate an FK.** When a required foreign key for the optional write is absent (e.g. an attribution user/space id isn't available), **skip** the write rather than invent a synthetic id that orphans the row or violates the constraint. Make the skip observable (log once at startup / debug), and prefer a config that supplies a real system id when the write is wanted by default.
-
-## Java micro-standards (instance vs static, regex, RNG)
-
-These complement the universal **Engineering Standards** in the SKILL.md — they are Java/JVM specific.
-
-### Prefer instance methods over `static` for logic on a bean/service
-
-Logic that conceptually belongs to a service/bean must be an **instance method**, not `static` — OOP keeps behaviour polymorphic, mockable, and DI-friendly. A class converted into a DI bean must not retain `static` logic helpers. Reserve `static` for:
-
-- genuinely stateless **pure utilities** (document *why* it is static),
-- idiomatic record/value **static factories** (`builder()`, `from()`, `of()`),
-- the JVM `main` family.
-
-Rationale: instance methods participate in injection and overriding; `static` logic on a bean is untestable-by-substitution and signals a misplaced responsibility.
-
-### Cache compiled regex `Pattern`s
-
-Compile a regex **once** — a `static final Pattern` constant, an instance field, or `computeIfAbsent` over a map for dynamic patterns — never call `Pattern.compile(...)` per invocation on a hot path. The compiled `Pattern` is immutable and thread-safe; per-call recompilation is pure wasted CPU and allocation.
-
-```java
-// BAD — recompiled on every call
-boolean isSlug(String s) { return Pattern.compile("^[a-z0-9-]+$").matcher(s).matches(); }
-
-// GOOD — compiled once, reused
-private static final Pattern SLUG = Pattern.compile("^[a-z0-9-]+$");
-boolean isSlug(String s) { return SLUG.matcher(s).matches(); }
-```
-
-### Seeded reproducible RNG = `SplittableRandom(seed)`
-
-For **reproducible** pseudo-randomness use `new SplittableRandom(seed)` — modern, seedable, and faster than `java.util.Random`. **Never use `ThreadLocalRandom` for reproducibility** — it cannot be seeded (`setSeed` throws `UnsupportedOperationException`). Use `SecureRandom` *only* for unpredictable security draws (tokens, salts, keys), never for reproducible sequences.
-
-When a reviewer questions a stdlib call's portability or behaviour, prefer an **explicit deterministic algorithm** (e.g. write out Fisher–Yates for a shuffle) over leaning on a subtle or newer overload — determinism must be guaranteed by the chosen primitive, not assumed.
 

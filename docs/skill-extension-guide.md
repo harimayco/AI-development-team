@@ -3,7 +3,7 @@
 This guide explains how to extend, customize, and add new skills to the AI Development Team.
 
 > **Note (2026-08):** the "stacks are references" rule this guide teaches has one deliberate
-> exception — **core languages** (Rust; SQL with dialect branches) ship as knowledge skills under
+> exception — **core languages** (Rust, Java, TypeScript; SQL with dialect branches) ship as knowledge skills under
 > `claude/skills/development/languages/`, because references never auto-load and language standards
 > must apply whenever that language is written, with no role command invoked. See the "Add a
 > language skill" recipe in `../CONTRIBUTING.md` before creating one.

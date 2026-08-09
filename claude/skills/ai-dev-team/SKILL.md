@@ -107,7 +107,7 @@ roster, and consult the disambiguation guidance when domains overlap.
 the matching `references/<stack>.md` — Angular/Vue/Flutter/JavaFX under the frontend role,
 Kotlin/FastAPI/Laravel/Quarkus/Kafka under the backend role, GraphQL under the architect,
 Terraform under DevOps, Cucumber under E2E. The deliberate exception: **core languages are
-knowledge skills** — Rust and SQL (Postgres/MySQL/Oracle/SQLite dialect branches) live in
+knowledge skills** — Rust, Java, TypeScript, and SQL (Postgres/MySQL/Oracle/SQLite dialect branches) live in
 `skills/development/languages/` and auto-load from context whenever that language is written or
 reviewed. They carry no persona and no command; the role agents route into them, so each body of
 knowledge exists in exactly one place.
