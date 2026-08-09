@@ -22,6 +22,7 @@ Set `preset:` in `workflow.yaml`:
 |---|---|---|---|
 | **solo** (default) | one dev | nothing — gates fire on trigger/change-class only | Backlog.md / markdown |
 | **small-team** | a few devs | code review always | Backlog.md / markdown |
+| **parallel-team** | multiple parallel sessions/workers | code review always; reviewer ≠ implementer is a policy from the `parallel-delivery` skill — the config enforces only the gate, not who ran it | Backlog.md / markdown |
 | **regulated** | compliance | arch + security + approval + review + verify + reliability always | Jira / Confluence |
 
 ## How enforcement works (3 layers, no editor-specific hooks)

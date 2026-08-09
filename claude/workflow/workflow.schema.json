@@ -6,7 +6,7 @@
   "additionalProperties": true,
   "properties": {
     "version": { "type": "integer", "minimum": 1 },
-    "preset": { "type": "string", "enum": ["solo", "small-team", "regulated"] },
+    "preset": { "type": "string", "enum": ["solo", "small-team", "parallel-team", "regulated"] },
     "change_classes": {
       "type": "object",
       "additionalProperties": {

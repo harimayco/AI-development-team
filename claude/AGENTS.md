@@ -2,7 +2,7 @@
 
 > _Mirrors `CLAUDE.md` so editors that read `AGENTS.md` (Cursor, Kiro, VS Code) get identical guidance. References to "Claude Code" apply to your assistant._
 
-A team of 42 skills (a 15-agent core team + optional specialists, plus auto-loading language skills and cross-cutting process skills) + an enforced, proportional dev workflow. Open-source, vendor-neutral, works in Claude Code / Cursor / Kiro / VS Code, free by default.
+A team of 43 skills (a 15-agent core team + optional specialists, plus auto-loading language skills and cross-cutting process skills) + an enforced, proportional dev workflow. Open-source, vendor-neutral, works in Claude Code / Cursor / Kiro / VS Code, free by default.
 
 > **Nothing loads this file automatically.** `install.sh` deploys only `skills/`, `commands/`,
 > `templates/` and `workflow/`, and generates its own pointer file at the destination; a plugin

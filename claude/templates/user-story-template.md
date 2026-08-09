@@ -10,8 +10,10 @@
 | Story Points | {estimate} |
 | Sprint | {sprint_number} |
 | Epic | {epic_name} |
-| Owner | {assignee} |
+| Owner | {owner — accountable for the story's content} |
 | Status | Not Started / In Progress / In Review / Done |
+| Branch | {exact branch name to create} |
+| Claimed by | {claimed_by — the worker currently implementing it; setting the tracker's assignee field to yourself is the lock, see `parallel-delivery`} |
 
 ## User Story
 
@@ -49,6 +51,16 @@
 - **Given** {initial context/state}
 - **When** {invalid action is performed}
 - **Then** {error handling behavior}
+
+### Negative Acceptance Criteria
+
+- [ ] {what must NOT happen} — enforced by `{symbol/test/guard that enforces it}`
+- [ ] {what must NOT happen} — enforced by `{symbol/test/guard that enforces it}`
+
+## Verification Steps
+
+1. `{exact command}` → expected: `{exact expected output}`
+2. `{exact command}` → expected: `{exact expected output}`
 
 ## Test Cases
 

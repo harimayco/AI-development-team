@@ -13,7 +13,7 @@
 # The default is `solo`: proportional, file-based, zero paid accounts.
 # ============================================================================
 version: 1
-preset: solo            # solo | small-team | regulated  (see `presets:` below)
+preset: solo            # solo | small-team | parallel-team | regulated  (see `presets:` below)
 
 # --- 1. Proportionality: right-size process to the change -------------------
 # The agent FIRST classifies the change, then runs the matching track. This is
@@ -84,6 +84,11 @@ presets:
     knowledge_base: markdown
   small-team:
     always_required: [CODE_REVIEWED]        # peer review always
+    default_track: by_change_class
+    tickets: backlog_md
+    knowledge_base: markdown
+  parallel-team:
+    always_required: [CODE_REVIEWED]        # peer review always; reviewer ≠ implementer is parallel-delivery policy, not enforced by this config
     default_track: by_change_class
     tickets: backlog_md
     knowledge_base: markdown

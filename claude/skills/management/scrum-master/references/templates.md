@@ -82,6 +82,8 @@
 **Sprint**: {N}
 **Depends On**: {other ticket IDs or "None"}
 **Source**: {investigation report, expert recommendation, user request}
+**Branch**: {exact branch name to create}
+**Claimed by**: {claimed_by — the worker currently implementing it; setting the tracker's assignee field to yourself is the lock, see `parallel-delivery`}
 
 ## Description
 {Clear, self-contained description of what needs to be done}
@@ -91,6 +93,14 @@
 - [ ] AC-2: {criterion} [Source: Per /fin C1]
 - [ ] AC-3: {criterion}
 - [ ] AC-N: All existing tests pass (regression safety)
+
+## Negative Acceptance Criteria
+- [ ] {what must NOT happen} — enforced by `{symbol/test/guard that enforces it}`
+- [ ] {what must NOT happen} — enforced by `{symbol/test/guard that enforces it}`
+
+## Verification Steps
+1. `{exact command}` → expected: `{exact expected output}`
+2. `{exact command}` → expected: `{exact expected output}`
 
 ## Implementation Details
 
