@@ -22,7 +22,7 @@ claude/
 ```
 
 Key ideas:
-- **Roles are agents; technology stacks are `references/`.** A role agent (e.g. `/be`) detects the project's stack and loads `references/<stack>.md` — we don't ship one agent per framework. See `claude/skills/disambiguation.md`.
+- **Roles are agents; technology stacks are `references/` — and core languages are knowledge skills.** A role agent (e.g. `/be`) detects the project's stack and loads `references/<stack>.md` — we don't ship one agent per framework. The deliberate exception is `claude/skills/development/languages/`: language expertise (Rust; SQL with Postgres/MySQL/Oracle/SQLite branches) is a first-class skill, because references never auto-load and language standards must apply whenever that language is being written — with no role command invoked. Language skills have no persona and no slash command; role agents route into them, and each body of knowledge exists in exactly one place. See `claude/skills/disambiguation.md`.
 - **Progressive disclosure.** Keep `SKILL.md` under ~500 lines; move depth into `references/`. The frontmatter `description` is the always-in-context "menu" the model scans, so keep it sharp and enumerate what the agent covers.
 - **OSS-first, no lock-in.** Defaults need zero paid accounts; Jira/Confluence/MCP backends are optional overlays enabled in `workflow.yaml`.
 
@@ -44,6 +44,15 @@ Key ideas:
 2. Add `claude/commands/cmd.md` that invokes it.
 3. Add a row to `claude/commands/agents.md` (Core or Specialists) and, if it overlaps another agent, a line in `claude/skills/disambiguation.md`.
 4. If the agent has a lot of depth, put it in `references/` and add a references index + (for multi-stack roles) a "Stack selection" router.
+
+## Add a language skill
+
+Language skills live in `claude/skills/development/languages/<lang>/` and differ from agents: no persona, no command file, and a frontmatter `description` written to **auto-trigger from context** — name the concrete file signals (extensions, manifests, tool failures) first, and end with a NOT-clause so it doesn't fire spuriously.
+
+1. Create `claude/skills/development/languages/<lang>/SKILL.md` (+ `references/` for depth, including a `<lang>-review.md` pass for `/rev`).
+2. Point the owning role agents' router tables at it (`/be`, `/fe`, `/dba`, `/rev` as applicable) — the role routes to the one copy; it does not duplicate it.
+3. Add a line to `claude/skills/disambiguation.md` and to the language-skills note in `claude/commands/agents.md`.
+4. Update the skill-count claim sites (G3 lists them if you miss one). No command step — loading from context is the point.
 
 ## Quality bar
 
