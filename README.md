@@ -10,7 +10,7 @@
 
 The framework is a portable agent layer you install once and use across every project. It ships four things:
 
-- **Agent skills** (`claude/skills/`) — lean `SKILL.md` personas that load deep `references/` on demand; tech stacks (React/Angular/Vue, Java/Kotlin/Python/PHP, …) are references the role *self-routes* to, not separate agents. Core languages (Rust; SQL with Postgres/MySQL/Oracle/SQLite branches) are the deliberate exception: knowledge skills in `skills/development/languages/` that **auto-load from context** whenever that language is written or reviewed — no persona, no command.
+- **Agent skills** (`claude/skills/`) — lean `SKILL.md` personas that load deep `references/` on demand; tech stacks (React/Angular/Vue, Java/Kotlin/Python/PHP, …) are references the role *self-routes* to, not separate agents. Core languages (Rust; SQL with Postgres/MySQL/Oracle/SQLite branches) are the deliberate exception: knowledge skills in `claude/skills/development/languages/` that **auto-load from context** whenever that language is written or reviewed — no persona, no command.
 - **The `workflow-engine`** — a skill that classifies each change and **refuses** to skip a required gate.
 - **`workflow.yaml`** — a versioned workflow definition, right-sized to the change via `solo` → `small-team` → `regulated` presets.
 - **Distribution** — a Claude Code **plugin** (declare it once per project; the commit SHA is the version, so every push is an update), or **`install.sh`**, which wires the skills, commands and templates into whichever editor(s) you use.

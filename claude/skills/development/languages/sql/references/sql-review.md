@@ -56,8 +56,9 @@ plan can overrule it, silence cannot.
 ### String-built SQL, per host language
 
 ```bash
-# Rust — format!() within two lines of a SQL verb
-grep -rn --include='*.rs' -A2 'format!' . | grep -niE '\b(SELECT|INSERT|UPDATE|DELETE)\b'
+# Rust — format!() within two lines of a SQL verb (first grep keeps file:line; the
+# filter adds none, so hits stay usable as evidence)
+grep -rn --include='*.rs' -A2 'format!' . | grep -iE '\b(SELECT|INSERT|UPDATE|DELETE)\b'
 
 # Python — f-strings, %-formatting, or concatenation near SQL verbs
 grep -rniE "f['\"][^'\"]*\b(select|insert|update|delete)\b" --include='*.py' .
