@@ -2,7 +2,7 @@
 
 ![Claude Code](https://img.shields.io/badge/Claude%20Code-ready-6E56CF) ![Cursor](https://img.shields.io/badge/Cursor-ready-111111) ![Kiro](https://img.shields.io/badge/Kiro-ready-9B59B6) ![VS Code](https://img.shields.io/badge/VS%20Code-ready-007ACC) ![License: MIT](https://img.shields.io/badge/License-MIT-green) ![Stars](https://img.shields.io/github/stars/olehsvyrydov/AI-development-team?style=social)
 
-> **A reusable AI agent-team framework for your editor.** 42 agent skills (a 15-agent core team + optional specialists + auto-loading language skills + cross-cutting process skills) plus a `workflow-engine` and an **enforced, proportional workflow** with approval gates — *process, not prompts*. Installs as a **Claude Code plugin**, or via the universal installer for Cursor, Kiro & VS Code. Open-source, no lock-in, free by default.
+> **A reusable AI agent-team framework for your editor.** 43 agent skills (a 15-agent core team + optional specialists + auto-loading language skills + cross-cutting process skills) plus a `workflow-engine` and an **enforced, proportional workflow** with approval gates — *process, not prompts*. Installs as a **Claude Code plugin**, or via the universal installer for Cursor, Kiro & VS Code. Open-source, no lock-in, free by default.
 
 ```
 /po → /arch → /secops → [/fin] → [/legal] → [/ui] → /fe | /be → /rev → /qa + /e2e → /verify
@@ -134,7 +134,7 @@ config for each — no lock-in:
 | **VS Code (Copilot)** | `.github/copilot-instructions.md` + `AGENTS.md` |
 
 ```bash
-./install.sh --editors=all --preset=solo --yes  # non-interactive (preset: solo|small-team|regulated)
+./install.sh --editors=all --preset=solo --yes  # non-interactive (preset: solo|small-team|parallel-team|regulated)
 ./install.sh --editors=claude --scope=user    # global ~/.claude (Claude Code)
 ./install.sh --dry-run                        # preview, change nothing
 ./install.sh --link                           # symlink content (dev mode)
@@ -185,7 +185,7 @@ generated at the destination:
 ├── CLAUDE.md                    # generated pointer (TDD workflow, approval gates)
 ├── TEAM_WORKFLOW.md             # Complete team process documentation
 │
-├── skills/                      # 42 agent skill files (15 core + specialists + language + process skills)
+├── skills/                      # 43 agent skill files (15 core + specialists + language + process skills)
 │   ├── management/              # Product Owner, Scrum Master, Business Analyst
 │   ├── architecture/            # Solution Architect, GraphQL Developer
 │   ├── development/
@@ -211,7 +211,8 @@ generated at the destination:
 │   ├── model-selection/         #  │ how to investigate, how to audit a grounded answer,
 │   ├── research-method/         #  │ and how to run a PR to a mergeable state.
 │   ├── answer-audit/            #  │
-│   └── pull-request/            # ─┘
+│   ├── parallel-delivery/       #  │ claiming, isolating and reporting back a ticket
+│   └── pull-request/            # ─┘ worked by a separate session.
 │
 ├── commands/                    # 50 slash commands
 │   ├── [role-based]             # /po, /sm, /ba, /arch, /fe, /be, /rev, /qa, /e2e ...
@@ -291,6 +292,7 @@ rarely invoke them by name, but knowing they exist lets you reach for one delibe
 | `research-method` | A question that needs measuring rather than deciding, and writing the result so it survives a hostile reader |
 | `answer-audit` | Checking a retrieval-grounded answer, assuming it is wrong until each claim is proven verbatim against a source |
 | `pull-request` | Running a PR to a mergeable state — resolving every review thread, checking runs by SHA rather than the summary |
+| `parallel-delivery` | Claiming a ticket for cross-session delivery, before creating its workspace/branch, or reporting it back — the claim protocol, workspace isolation, and the report-back contract |
 
 **The rule they exist to enforce:** a ticket is Done only when its **negative** criteria are met —
 the guard, the refusal, the "cannot bypass" — and each names the **symbol** that enforces it. Happy

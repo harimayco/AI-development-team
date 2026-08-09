@@ -15,7 +15,7 @@
 # Flags:
 #   --editors=claude,cursor,kiro,vscode|all   which editors to wire up
 #   --scope=project|user                      project (./) or global (~/.claude); default project
-#   --preset=solo|small-team|regulated        workflow preset; default solo
+#   --preset=solo|small-team|parallel-team|regulated  workflow preset; default solo
 #   --link                                    symlink the content instead of copying (dev)
 #   --dry-run                                 show actions only
 #   --yes / -y                                non-interactive; accept defaults
@@ -57,7 +57,7 @@ parse_args() {
   done
   [ "$EDITORS" = "all" ] && EDITORS="claude,cursor,kiro,vscode"
   case "$SCOPE" in project|user) ;; *) die "--scope must be project or user" ;; esac
-  case "$PRESET" in solo|small-team|regulated) ;; *) die "--preset must be solo, small-team, or regulated" ;; esac
+  case "$PRESET" in solo|small-team|parallel-team|regulated) ;; *) die "--preset must be solo, small-team, parallel-team, or regulated" ;; esac
   # fail fast on unknown editor names (typos)
   local e
   for e in ${EDITORS//,/ }; do

@@ -12,6 +12,8 @@
 | Epic | {epic_name} |
 | Owner | {assignee} |
 | Status | Not Started / In Progress / In Review / Done |
+| Branch | {exact branch name to create} |
+| Claimed by | {assignee — the ticket backend's assignee field is the lock; see `parallel-delivery`} |
 
 ## User Story
 
@@ -49,6 +51,16 @@
 - **Given** {initial context/state}
 - **When** {invalid action is performed}
 - **Then** {error handling behavior}
+
+### Negative Acceptance Criteria
+
+- [ ] {what must NOT happen} — enforced by `{symbol/test/guard that enforces it}`
+- [ ] {what must NOT happen} — enforced by `{symbol/test/guard that enforces it}`
+
+## Verification Steps
+
+1. `{exact command}` → expected: `{exact expected output}`
+2. `{exact command}` → expected: `{exact expected output}`
 
 ## Test Cases
 
