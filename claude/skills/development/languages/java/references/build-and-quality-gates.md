@@ -20,9 +20,11 @@ jspecify = "1.0.0"
 junit = "6.0.1"              # one version across Platform/Jupiter/Vintage
 jqwik = "1.10.1"
 archunit = "1.4.1"
-pitest = "1.16.1"
+pitest = "1.19.4"            # floor for the current junit5 plugin; re-verify at adoption
+pitestJunit5Plugin = "1.2.1" # JUnit Platform engines are NOT built into pitest core
 pitestPlugin = "1.15.0"
 testcontainers = "1.21.3"    # Spring Boot's BOM manages this when present
+assertj = "3.27.3"
 cyclonedxPlugin = "2.3.0"
 
 [libraries]
@@ -36,6 +38,9 @@ jqwik = { module = "net.jqwik:jqwik", version.ref = "jqwik" }
 archunit = { module = "com.tngtech.archunit:archunit", version.ref = "archunit" }
 testcontainers-junit = { module = "org.testcontainers:junit-jupiter", version.ref = "testcontainers" }
 testcontainers-postgresql = { module = "org.testcontainers:postgresql", version.ref = "testcontainers" }
+assertj = { module = "org.assertj:assertj-core", version.ref = "assertj" }
+postgresql = { module = "org.postgresql:postgresql", version = "42.7.7" }
+pitest-junit5 = { module = "org.pitest:pitest-junit5-plugin", version.ref = "pitestJunit5Plugin" }
 
 [plugins]
 errorprone = { id = "net.ltgt.errorprone", version.ref = "errorpronePlugin" }
@@ -66,8 +71,11 @@ dependencies {
     testRuntimeOnly(libs.junit.platform.launcher)
     testImplementation(libs.jqwik)
     testImplementation(libs.archunit)
+    testImplementation(libs.assertj)
     testImplementation(libs.testcontainers.junit)
     testImplementation(libs.testcontainers.postgresql)
+    testRuntimeOnly(libs.postgresql)   // JDBC driver for the plain-JDBC template in §6
+    pitest(libs.pitest.junit5)         // JUnit Platform engine support for PIT
 }
 
 tasks.withType<JavaCompile>().configureEach {
@@ -125,7 +133,7 @@ at ERROR.
 --add-exports jdk.compiler/com.sun.tools.javac.main=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.model=ALL-UNNAMED
 --add-exports jdk.compiler/com.sun.tools.javac.parser=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.processing=ALL-UNNAMED
 --add-exports jdk.compiler/com.sun.tools.javac.tree=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.util=ALL-UNNAMED
---add-opens jdk.compiler/com.sun.tools.javac.code=ALL-UNNAMED --add-opens jdk.compiler/com.sun.tools.javac.comment=ALL-UNNAMED
+--add-opens jdk.compiler/com.sun.tools.javac.code=ALL-UNNAMED --add-opens jdk.compiler/com.sun.tools.javac.comp=ALL-UNNAMED
 ```
 
 ## 3. JSpecify — the `@NullMarked` package template
@@ -230,16 +238,26 @@ pitest {
 <plugin>
   <groupId>org.pitest</groupId>
   <artifactId>pitest-maven</artifactId>
-  <version>1.16.1</version>
+  <version>1.19.4</version>
   <configuration>
     <threads>4</threads>
     <mutationThreshold>75</mutationThreshold>
     <withHistory>true</withHistory>
   </configuration>
+  <dependencies>
+    <dependency>
+      <groupId>org.pitest</groupId>
+      <artifactId>pitest-junit5-plugin</artifactId>
+      <version>1.2.1</version>
+    </dependency>
+  </dependencies>
 </plugin>
 ```
 
-- PIT 1.16+ runs JUnit 6 tests directly — no separate junit5 plugin artifact.
+- JUnit Platform engines (JUnit 6 Jupiter) are **not** built into pitest core — the
+  separate `pitest-junit5-plugin` is required (its current line needs pitest 1.19.4+;
+  re-verify both versions at adoption). Without it, PIT discovers no tests and every
+  mutation survives.
 - `withHistory` is the incremental analysis: PR CI re-analyzes only changed classes and
   their mutants, which is what makes the 75% threshold on new/changed code affordable per
   PR (J23). A weekly job runs from `clean`, discarding history to force a full analysis.

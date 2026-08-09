@@ -19,7 +19,7 @@ Numbered so reviews and tickets can cite them. Violations are BLOCKING at review
 
 **S5 — One error contract.** RFC 9457 `ProblemDetail` everywhere; no ad-hoc error JSON shapes per controller.
 
-**S6 — API versioning via Framework 7's built-in mechanism** — `@ApiVersion` plus a configured version resolution strategy — not hand-rolled URL surgery or bespoke header parsing.
+**S6 — API versioning via Framework 7's built-in mechanism** — the `version` attribute on `@RequestMapping`/`@GetMapping` plus a resolution strategy configured through `ApiVersionConfigurer` (there is no `@ApiVersion` annotation) — not hand-rolled URL surgery or bespoke header parsing.
 
 **S7 — Slice tests first.** `@WebMvcTest` / `@DataJpaTest` / the other slices carry the behaviour tests; `@SpringBootTest` exists to prove wiring, not to run the suite. Mock Spring beans with `@MockitoBean` — the Boot 4 replacement for the removed `@MockBean`.
 
@@ -40,7 +40,7 @@ Numbered so reviews and tickets can cite them. Violations are BLOCKING at review
 **New in Spring Framework 7 / Spring Boot 4:**
 - **Jakarta EE 11** baseline (Servlet 6.1, JPA 3.2)
 - **Java 17+ minimum**, optimized for Java 21+/25
-- **API Versioning** — built-in `@ApiVersion` annotation for REST API versioning
+- **API Versioning** — built-in: the `version` attribute on request mappings + `ApiVersionConfigurer` strategy
 - **JSpecify Null Safety** — replacing Spring's `@Nullable` with JSpecify standard
 - **Jackson 3** — new `jackson-databind` with module changes
 - **Modular Auto-Configuration** — split into technology-specific modules
@@ -377,7 +377,7 @@ Table: outbox (id, aggregate_type, aggregate_id, event_type, payload, created_at
 - **POM Structure**: Parent POM, BOM imports, dependency management
 - **Lifecycle**: `validate` → `compile` → `test` → `package` → `verify` → `install` → `deploy`
 - **Multi-Module**: Reactor build order, `-pl` selective builds, `-am` also-make
-- **Plugins**: `maven-compiler-plugin` (Java 25, `--enable-preview`), `maven-surefire-plugin`, `maven-failsafe-plugin`, `spring-boot-maven-plugin`, `jib-maven-plugin`, `protobuf-maven-plugin`
+- **Plugins**: `maven-compiler-plugin` (Java 25; `--enable-preview` only under the java language skill's recorded preview opt-in — never as a default), `maven-surefire-plugin`, `maven-failsafe-plugin`, `spring-boot-maven-plugin`, `jib-maven-plugin`, `protobuf-maven-plugin`
 - **Profiles**: Environment-specific configs, activation strategies
 - **Dependency Management**: Version locking, BOM imports, exclusions, optional dependencies
 - **Repository Management**: Nexus/Artifactory, mirror configuration

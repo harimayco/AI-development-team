@@ -487,7 +487,7 @@ These are **independent systems**. Adding a key to PHP `lang/` does NOT make it 
 - **Vite-powered** — same config, instant HMR for test files
 - **Watch mode** — instant feedback on save
 - **Browser Mode** — test in real browser (catches real-world issues)
-- **Coverage** — c8 or istanbul built-in
+- **Coverage** — v8 (default) or istanbul provider
 - **Jest-compatible API** — `describe`, `it`, `expect`, `vi.fn()`
 
 #### React Testing Library (RTL)

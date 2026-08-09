@@ -97,7 +97,7 @@ Use `WebSearch` and `WebFetch` for anything version- or advisory-shaped:
 | Error Prone | ≥ 2.36 | The floor NullAway requires |
 | NullAway | 0.12.x | `OnlyNullMarked` mode for incremental adoption |
 | JUnit | 6.0.x | GA 2025-09; one version across Platform/Jupiter/Vintage; Java 17 baseline |
-| PIT (pitest) | 1.16.x | Incremental analysis; direct JUnit 6 support |
+| PIT (pitest) | 1.19.4+ | Incremental analysis; JUnit Platform engines (JUnit 6 Jupiter) via the separate `pitest-junit5-plugin` (1.2.x) |
 | jqwik | 1.10.x | Property-based testing |
 | ArchUnit | 1.4.x | Architecture rules as tests |
 | Testcontainers | current | With Spring Boot `@ServiceConnection` |
@@ -278,9 +278,12 @@ justification in the PR.
 `StructuredTaskScope` with a `Joiner` expresses fork/join with correct cancellation, but
 it is **preview** (JEP 505 in 25, renamed in 26's JEP 525, expected final in 27). Policy:
 preview features are OFF in production unless the project explicitly opts in and records
-the decision. The no-preview fallback: an executor with `invokeAll` under an explicit
-deadline, cancelling siblings on first failure. Either way, every fork is joined — a
-fire-and-forget submit is a defect.
+the decision. The no-preview fallback: submit each subtask individually and consume
+completions via an `ExecutorCompletionService` (or a list of futures polled as they
+finish) under an explicit deadline; on the first failure, cancel the remaining futures
+yourself — note that `invokeAll` cannot do this, since it blocks until every task
+finishes and surfaces failures only at `Future.get`. Either way, every fork is joined —
+a fire-and-forget submit is a defect.
 
 **J15 — Every blocking external call has an explicit timeout.** HTTP, JDBC, queue,
 cache — connect and read timeouts stated at the call site or the client builder, never
@@ -297,6 +300,17 @@ inherited from a library default, because the library default is usually "infini
 | `finalize()` | `Cleaner` |
 | `Pattern.compile` per call | Cached `static final Pattern` |
 | Service logic `static` on a DI bean | Instance method — substitutable and injectable |
+
+Primitive selection, when shared state or coordination is genuinely needed:
+
+| Concept | Tool | When |
+|---------|------|------|
+| Thread-safe collections | `ConcurrentHashMap`, `CopyOnWriteArrayList` | Shared mutable state |
+| Atomic operations | `AtomicReference`, `VarHandle`, `LongAdder` | Lock-free updates |
+| Locks | `ReentrantLock`, `StampedLock`, `ReadWriteLock` | Fine-grained locking |
+| Synchronizers | `CountDownLatch`, `Semaphore`, `Phaser`, `CyclicBarrier` | Thread coordination |
+| Executors | `newVirtualThreadPerTaskExecutor()`, `ForkJoinPool` | Task scheduling |
+| `CompletableFuture` | `thenApply`, `thenCompose`, `allOf`, `anyOf` | Async composition |
 
 ### Build hygiene
 
@@ -320,7 +334,14 @@ finding blocks merge; SBOM published via CycloneDX. Wiring in
 
 **J20 — JUnit 6.** One version across Platform, Jupiter, and Vintage (Java 17 baseline).
 Naming keeps the house convention: `should_<expected>_when_<condition>`, or a
-`@DisplayName` sentence about observable behaviour.
+`@DisplayName` sentence about observable behaviour. The unit-test toolkit and shape:
+**Mockito 5** (`@Mock`, `@InjectMocks`, `BDDMockito`; mock collaborators, never the type
+under test), **AssertJ** fluent assertions (`assertThat().extracting()`,
+`assertThatThrownBy()`), Given-When-Then structure with one assertion *concept* per
+test, no interdependence between tests (any order, any subset), and test-data builders
+over copy-pasted fixture literals. The pyramid holds: many unit tests, fewer
+integration/slice tests, few end-to-end — inverted pyramids are slow and flaky where
+they are supposed to be cheap and exact.
 
 **J21 — Parameterized tests for input classes; properties for invariants.** Input
 partitions get `@ParameterizedTest`; algebraic invariants — round-trips, idempotency,
@@ -335,7 +356,8 @@ decision lands as an ArchUnit rule **in the same PR** — the extension-point di
 of `../../../architecture/solution-architect/references/design-for-predictability.md`
 (D6) made executable. Starter class in `references/build-and-quality-gates.md`.
 
-**J23 — Mutation testing gates new code.** PIT 1.16+ with incremental analysis on PR CI:
+**J23 — Mutation testing gates new code.** PIT 1.19.4+ with the `pitest-junit5-plugin`
+(JUnit Platform engines are not built into pitest core) and incremental analysis on PR CI:
 mutation score ≥ 75% on new and changed classes, plus a weekly full run to keep the
 history honest. Advisory for the first sprint, then blocking. Never chase 100% —
 equivalent mutants make it unreachable, and the chase produces assertion noise.
@@ -374,8 +396,8 @@ Files.copy(zip.getInputStream(entry), target);
 ```
 
 **J28 — SSRF: allowlist before fetch.** A client-supplied URL passes a host allowlist and
-a deny of private and link-local ranges (10/8, 172.16/12, 192.168/16, 169.254/16, `::1`,
-`fd00::/8`) **before** any request is made — after DNS resolution, so a hostname pointing
+a deny of loopback, private and link-local ranges (127.0.0.0/8, 10/8, 172.16/12,
+192.168/16, 169.254/16, `::1`, `fd00::/8`, `fe80::/10`) **before** any request is made — after DNS resolution, so a hostname pointing
 into the private range is caught too. The guard is the checked resolver the HTTP client
 is built with.
 
