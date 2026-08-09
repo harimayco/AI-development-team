@@ -2,13 +2,16 @@
 
 This file records all notable changes to the project. Versioning roughly follows [semver](https://semver.org), and dates are written in ISO-8601.
 
+## [Unreleased]
+
 ## [5.3.0] — 2026-08-09
 
 Language expertise becomes a first-class layer. Four knowledge skills — Rust, SQL, Java,
 TypeScript — auto-load from context whenever their language is being written, instead of
 waiting for a role command; the architect gains the deliverables that put failure modes and
 test cases on paper before implementation; and the gates that used to be run by hand now run
-in CI. Additions only, so a minor bump.
+in CI. New capability plus one removal whose replacement ships in the same release, so a
+minor bump per the versioning note below.
 
 ### Added
 - **Language skills: `rust` and `sql`** (`claude/skills/development/languages/`) — a deliberate amendment to "stacks are references". References never auto-load, and language standards must apply whenever that language is being written, with no role command invoked — so language expertise becomes a first-class skill whose frontmatter description triggers from context (a `.rs` file, a migration, an embedded query). No persona and no slash command; `/be`, `/dba`, `/rev` and `/arch` route into the one copy. Rust carries checked-in toolchain/lint/deny policy, ownership-driven architecture (core crate + thin shells, state machines, newtypes), the error doctrine with a failure-table method, tokio task ownership and cancellation, rusqlite embedding, deterministic testing (fixtures that refuse real credentials), boundary security, and a reviewer pass. SQL carries parameterized-only, versioned migrations with expand-migrate-contract, EXPLAIN-before-merge, a scratch-container empirical check, dialect branches for PostgreSQL 18, MySQL 8.4/9.7, Oracle 26ai and SQLite, and a reviewer pass.
