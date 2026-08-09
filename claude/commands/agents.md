@@ -4,7 +4,7 @@ description: List all available AI Development Team agents and their specializat
 
 # AI Development Team — Agent Directory
 
-> **Two-tier roster.** A **core team** (15) you'll use on most work, plus **optional specialists** loaded when a task needs them. **Technology stacks are not separate agents** — a role agent (e.g. `/be`) detects the project's stack and loads the matching `references/<stack>.md`. So "build a FastAPI endpoint" still routes to `/be`. The exception: **core languages** (Rust; SQL with dialect branches) are knowledge skills under `skills/development/languages/` that auto-load from context — no persona, no command.
+> **Two-tier roster.** A **core team** (15) you'll use on most work, plus **optional specialists** loaded when a task needs them. **Technology stacks are not separate agents** — a role agent (e.g. `/be`) detects the project's stack and loads the matching `references/<stack>.md`. So "build a FastAPI endpoint" still routes to `/be`. The exception: **core languages** (Rust, Java, TypeScript; SQL with dialect branches) are knowledge skills under `skills/development/languages/` that auto-load from context — no persona, no command.
 >
 > **Naming:** role commands (`/arch`, `/be`, `/fe`) are standard; persona aliases (`/jorge`, `/james`, `/finn`) invoke the same agent.
 
@@ -77,7 +77,7 @@ Folded into their parent role's `references/` — the role agent self-routes to 
 | `/legal` | `uk/` |
 | `/fin` | `uk/`, `uk-self-employment.md` |
 
-**Language skills (auto-load from context):** `skills/development/languages/` — `rust/` and `sql/` (Postgres, MySQL, Oracle, SQLite branches). No persona, no command; their descriptions trigger whenever that language is written or reviewed, and `/be`, `/dba`, `/rev`, `/arch` route into them.
+**Language skills (auto-load from context):** `skills/development/languages/` — `rust/`, `java/`, `typescript/`, and `sql/` (Postgres, MySQL, Oracle, SQLite branches). No persona, no command; their descriptions trigger whenever that language is written or reviewed, and `/be`, `/fe`, `/dba`, `/rev`, `/arch` route into them.
 
 ## Additional Commands
 

@@ -41,7 +41,7 @@
 
 ---
 
-### Next.js 15+ (App Router)
+### Next.js 16+ (App Router)
 
 #### Core Features
 - **Server Components** (default) — async, data fetching, no client JS
@@ -61,50 +61,23 @@
 - **`unstable_after`** — execute code after response streaming
 - **`instrumentation.js`** — server lifecycle observability
 
-#### Caching in Next.js 15
+#### Caching in Next.js 16
 - **No default caching** — fetch, GET handlers, client navigation uncached by default
 - **Async APIs** — `headers()`, `cookies()`, `params`, `searchParams` are now async
 - **Revalidation** — `revalidatePath()`, `revalidateTag()`, time-based with `next.revalidate`
 - **ISR** — Incremental Static Regeneration with `revalidate` option
 
-#### Next.js 16 (Preview)
+#### New in Next.js 16
 - **Turbopack default** — default bundler for all new projects
 - **Cache Components** — `use cache` directive for Partial Pre-Rendering (PPR)
 
 ---
 
-### TypeScript 5.7+ / 5.8+
+### TypeScript in React
 
-#### Core Type System Mastery
-
-**Advanced Types:**
-- **Discriminated Unions** — tagged unions with `type` field for exhaustive `switch`
-- **Template Literal Types** — `type Route = \`/api/${string}\``
-- **Branded Types** — `type UserId = string & { __brand: 'UserId' }` for type safety
-- **Mapped Types** — `{ [K in keyof T]: ... }` for type transformations
-- **Conditional Types** — `T extends U ? X : Y` for type-level logic
-- **`satisfies`** operator — validate types without widening: `const config = {...} satisfies Config`
-- **`const` assertions** — `as const` for literal types, `as const satisfies` for validated literals
-- **Variance annotations** — `in`, `out`, `in out` for generic type parameters
-- **`infer` keyword** — extract types from patterns: `type ReturnOf<T> = T extends (...) => infer R ? R : never`
-- **Type predicates** — `function isUser(x: unknown): x is User` for type narrowing
-- **`NoInfer<T>`** — prevent inference from specific positions
-
-**TypeScript 5.7 Features:**
-- `--rewriteRelativeImportExtensions` — rewrite `.ts` imports to `.js` for direct execution
-- `--target es2024` — `Object.groupBy`, `Map.groupBy`, `Promise.withResolvers`
-- Improved uninitialized variable detection
-- Generic TypedArrays
-
-**TypeScript 5.8 Features:**
-- Smarter return type checking for conditional expressions
-- `--erasableSyntaxOnly` — for Node.js `--experimental-strip-types` compatibility
-- `--module node18` — stable module resolution for Node 18
-- Performance optimizations (path normalization, tsconfig reuse)
-
-**TypeScript 7 (Coming):**
-- Full compiler rewrite in Go for 10x performance
-- TypeScript 6.0 as bridge release
+Language-level TypeScript lives in the **typescript** language skill (`../../../../languages/typescript/SKILL.md`), which auto-loads whenever TypeScript is written.
+That skill owns the strictest tsconfig profile, discriminated unions and exhaustiveness, branded types, parse-don't-validate with Zod, typescript-eslint discipline, and the Vitest doctrine.
+This section keeps only the TS patterns specific to React.
 
 #### TypeScript Patterns for React
 
@@ -120,10 +93,6 @@ type AsyncState<T> =
 type PolymorphicProps<E extends React.ElementType> = {
   as?: E;
 } & Omit<React.ComponentPropsWithoutRef<E>, 'as'>;
-
-// Branded type for IDs
-type UserId = string & { readonly __brand: unique symbol };
-const createUserId = (id: string): UserId => id as UserId;
 
 // Strict event handler types
 type FormSubmitHandler = React.FormEventHandler<HTMLFormElement>;
@@ -343,11 +312,11 @@ These are **independent systems**. Adding a key to PHP `lang/` does NOT make it 
 
 ### Build Tools
 
-#### Vite 6
+#### Vite 7
 - **HMR** — instant hot module replacement with state preservation
 - **esbuild** — pre-bundling dependencies (Go-based, extremely fast)
 - **Rollup** — production builds with tree shaking
-- **Environment API** (v6) — closer dev/prod parity for SSR
+- **Environment API** (since v6) — closer dev/prod parity for SSR
 - **Adaptive chunking** — intelligent code splitting
 - **CSS Modules** — scoped CSS with `.module.css`
 - **Plugin ecosystem** — vast plugin library
@@ -518,7 +487,7 @@ These are **independent systems**. Adding a key to PHP `lang/` does NOT make it 
 - **Vite-powered** — same config, instant HMR for test files
 - **Watch mode** — instant feedback on save
 - **Browser Mode** — test in real browser (catches real-world issues)
-- **Coverage** — c8 or istanbul built-in
+- **Coverage** — v8 (default) or istanbul provider
 - **Jest-compatible API** — `describe`, `it`, `expect`, `vi.fn()`
 
 #### React Testing Library (RTL)

@@ -128,6 +128,16 @@ For compile-time null safety, recommend projects adopt **NullAway + Error Prone 
 - NullAway catches null dereferences at compile time with <10% build overhead
 - See: spring.io/blog/2025/03/10/null-safety-in-spring-apps-with-jspecify-and-null-away/
 
+### Gate-presence check (from the java language skill)
+The **java** language skill (`../../../../development/languages/java/SKILL.md`) makes two of
+these gates build-time standards. In Pass 0, check whether the project has them wired:
+- **NullAway as a build ERROR** (J7): if wired, the grep scan above is a backstop only; if
+  absent, run the full grep scan AND record "NullAway not wired" as a finding on a `full`-track
+  change (the ready-made wiring: `../../../../development/languages/java/references/build-and-quality-gates.md`).
+- **ArchUnit rules present** (J22): a `full`-track change that adds or moves a module boundary
+  must land its ArchUnit rule in the same PR — an approved boundary with no executable rule is
+  an unmet negative criterion.
+
 ## Engineering Standards Enforcement (BLOCKING + Flag)
 
 Enforce these on every backend review. Severity is fixed — do not downgrade.
