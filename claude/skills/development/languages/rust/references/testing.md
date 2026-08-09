@@ -272,6 +272,34 @@ not on full frame snapshots that break with every cosmetic change.
 
 ---
 
+### In-process service tests — the tier below the pty
+
+For HTTP services (axum), there is a middle tier that needs no socket, no port, and
+no spawned process: build the real router and drive it in process with tower's
+`ServiceExt::oneshot`. The full middleware stack — auth, limits, error mapping — is
+exercised; nothing is bound.
+
+```rust
+use axum::body::Body;
+use axum::http::{Request, StatusCode};
+use tower::util::ServiceExt;
+
+#[tokio::test]
+async fn a_request_without_a_bearer_token_is_refused_with_401() {
+    let app = build_router(test_state());
+
+    let response = app
+        .oneshot(Request::builder().uri("/api/items").body(Body::empty()).unwrap())
+        .await
+        .unwrap();
+
+    assert_eq!(response.status(), StatusCode::UNAUTHORIZED);
+}
+```
+
+Reserve the pty tier for what only the shipped binary can prove; route handler and
+middleware behaviour belongs here, at microsecond cost.
+
 ## 8. Property-based testing — narrow, four target classes
 
 Adopt `proptest` 1.x **narrowly, in the core crate**, where inputs are structured and

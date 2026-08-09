@@ -160,7 +160,8 @@ Three algorithms, in order of preference: **INSTANT** (metadata-only) → **INPL
 |---|---|---|
 | Add column (last position) | INSTANT | 8.0.12 |
 | Add column (any position), drop column | INSTANT | 8.0.29 |
-| Rename column, set/drop column default | INSTANT | 8.0 |
+| Set/drop column default | INSTANT | 8.0.12 |
+| Rename column | INSTANT | 8.0.28 |
 | Add/drop index | INPLACE | — |
 | Change column type, charset, PK | COPY | — |
 

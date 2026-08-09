@@ -91,6 +91,7 @@ Use `WebSearch` and `WebFetch` for anything version- or advisory-shaped:
 | axum | 0.8 | HTTP services; pre-1.0 — re-check APIs at task time |
 | rusqlite | 0.40 | Embedded SQLite; `bundled` implications in `references/dependencies-supply-chain.md` |
 | clap | 4 | CLI argument parsing (derive) |
+| rand | 0.9 | OS entropy via `TryRngCore` (`OsRng.try_fill_bytes`); 0.8's infallible `OsRng.fill_bytes` is gone |
 | proptest | 1 | Property-based testing |
 | cargo-deny, cargo-audit, cargo-llvm-cov, cargo-machete | current | Supply chain, advisories, coverage, unused deps |
 
@@ -374,11 +375,15 @@ it, not all of them up front:
 
 This skill owns no gates. The `workflow-engine` contract and the role agents' own gate
 checks apply unchanged; this skill only supplies the language knowledge inside them.
-Rust-specific gate triggers to know:
+Rust-specific gate triggers to know (they mirror `workflow.yaml` — that file decides):
 
-- New `unsafe` blocks, new dependencies, and new listening sockets are **SECOPS
-  triggers**.
-- New crates and new crate boundaries are **ARCH triggers**.
+- New dependencies, new crates, and new crate boundaries are **ARCH triggers**
+  (`new_dependency`, `new_service`, `cross_boundary`).
+- Security-sensitive surfaces — auth, secrets, external input, **network exposure such
+  as a new listening socket**, crypto — are **SECOPS triggers**.
+- New `unsafe` is not a named workflow trigger; it is BLOCKING-severity review
+  territory (`references/rust-review.md`), and `/rev` escalates to `/secops` when the
+  block touches a security surface.
 
 Whether those gates fire is the workflow-engine's decision, not this skill's. What this
 skill does supply is the evidence the gates consume: the failure table, the test list,

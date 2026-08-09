@@ -120,12 +120,16 @@ every browser tab on the machine can reach localhost.
 ```rust
 use std::io::Write;
 use std::path::Path;
-use rand::RngCore;
+use rand::TryRngCore;
 
 /// First-run token: 256 bits from the OS CSPRNG, hex-encoded, mode 0600.
+/// rand 0.9 API — `OsRng` is fallible (`TryRngCore`); under rand 0.8 this
+/// was the infallible `RngCore::fill_bytes`.
 fn generate_token_file(path: &Path) -> std::io::Result<String> {
     let mut bytes = [0u8; 32];
-    rand::rngs::OsRng.fill_bytes(&mut bytes);
+    rand::rngs::OsRng
+        .try_fill_bytes(&mut bytes)
+        .map_err(std::io::Error::other)?;
     let token = hex::encode(bytes);
 
     let mut options = std::fs::OpenOptions::new();

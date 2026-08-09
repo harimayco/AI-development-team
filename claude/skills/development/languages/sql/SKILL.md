@@ -6,7 +6,7 @@ description: "SQL and relational-database engineering with dialect branches for 
 # SQL (language skill)
 
 A knowledge skill, not an agent: it loads from context whenever SQL is being written or
-reviewed. Role agents (/be, /dba, /data, /rev, /arch) route into it; it carries the language,
+reviewed. Role agents (/be, /dba, /rev, /arch) route into it; it carries the language,
 the dialect references carry the engines.
 
 ## Trigger
@@ -321,16 +321,16 @@ SQLite projects use `PRAGMA user_version` instead — the pattern is in
 ### Batched backfill
 
 ```sql
--- One bounded batch. The runner loops until 0 rows change, pausing between batches
--- and watching replica lag. Never one UPDATE across the whole table: that is one
--- giant transaction, one giant lock, and one giant replication event.
+-- One bounded batch, keyed by a PK range — the portable shape. (A LIMIT subquery
+-- over the target table is NOT portable: MySQL rejects updating a table selected
+-- in its own subquery (error 1093), and Oracle has no LIMIT.) The runner advances
+-- :last_id by the range width each pass until past MAX(id), pausing between
+-- batches and watching replica lag. Never one UPDATE across the whole table:
+-- that is one giant transaction, one giant lock, one giant replication event.
 UPDATE orders SET status_v2 = status
-WHERE id IN (
-    SELECT id FROM orders
-    WHERE status_v2 IS NULL
-    ORDER BY id
-    LIMIT 1000
-);
+WHERE status_v2 IS NULL
+  AND id >  :last_id
+  AND id <= :last_id + 10000;
 ```
 
 ### Keyset pagination
@@ -349,8 +349,13 @@ ORDER BY created_at DESC, id DESC
 LIMIT 20;
 ```
 
-Row-value comparison syntax varies by dialect (Oracle spells it differently) — the dialect
-references carry the local form.
+Row-value comparison `(a, b) < ($1, $2)` works on Postgres and SQLite (3.15+). MySQL
+parses it but does not use the composite index for it, and Oracle rejects it outright —
+on those two, write the expanded form:
+
+```sql
+WHERE created_at < :1 OR (created_at = :1 AND id < :2)
+```
 
 ## Workflow note
 

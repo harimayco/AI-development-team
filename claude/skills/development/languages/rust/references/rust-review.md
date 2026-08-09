@@ -84,15 +84,19 @@ Legitimate survivors are rare and always documented: a mutex whose poisoning is
 unrecoverable by design, a static regex proven valid by a test. "It can't fail here"
 without evidence is a finding (`errors.md`).
 
-**Undocumented unsafe** (heuristic; the clippy lint above is the confirming check):
+**Unsafe sites** (locator only — the deciding check is the
+`clippy::undocumented_unsafe_blocks` lint already in the Pass-0 command):
 
 ```bash
-grep -rn -B1 --include='*.rs' 'unsafe ' | grep -v 'SAFETY'
+grep -rn --include='*.rs' -e 'unsafe fn' -e 'unsafe {' src/ crates/*/src/
 ```
 
 Every `unsafe` block needs a `// SAFETY:` comment stating the invariant upheld
-(`security.md` §7). The `-B1` context catches the comment on the preceding line; the
-grep over-reports (e.g. `unsafe` in strings), so confirm with the lint before filing.
+(`security.md` §7). The grep cannot tell a documented block from an undocumented one
+(and hits `unsafe` inside strings) — the clippy lint makes that distinction
+mechanically. Use the grep's hit list to spot-read each site's `// SAFETY:` argument
+for whether the stated invariant actually holds; the lint only checks that a comment
+exists.
 
 **Env mutation** (unsafe in edition 2024; `testing.md` §5 has the only sanctioned shape):
 

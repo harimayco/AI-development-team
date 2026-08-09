@@ -321,8 +321,8 @@ ORDER BY customer_id, created_at DESC;
 
 | ALTER | Lock / cost | Safe pattern |
 |---|---|---|
-| `ADD COLUMN` (no default, or non-volatile default) | Brief `ACCESS EXCLUSIVE`, **no rewrite** (11+) | Fine as-is — still under a `lock_timeout` |
-| `ADD COLUMN ... DEFAULT <volatile>` (`now()`, `random()`, `uuidv7()`) | **Full table rewrite** | Add nullable → backfill in batches → set the default for new rows |
+| `ADD COLUMN` (no default, or non-volatile default — `now()` is STABLE and qualifies) | Brief `ACCESS EXCLUSIVE`, **no rewrite** (11+) | Fine as-is — still under a `lock_timeout` |
+| `ADD COLUMN ... DEFAULT <volatile>` (`random()`, `clock_timestamp()`, `uuidv7()`, `gen_random_uuid()`) | **Full table rewrite** | Add nullable → backfill in batches → set the default for new rows |
 | `ADD FOREIGN KEY` / `ADD CHECK` | `ACCESS EXCLUSIVE` + full validating scan | `ADD CONSTRAINT ... NOT VALID` now; `VALIDATE CONSTRAINT` later (takes only `SHARE UPDATE EXCLUSIVE`) |
 | `SET NOT NULL` | Full scan under `ACCESS EXCLUSIVE` | Add `CHECK (col IS NOT NULL) NOT VALID` → `VALIDATE` → `SET NOT NULL` (12+ sees the proof, skips the scan) → drop the CHECK |
 | `ALTER COLUMN TYPE` (storage-changing) | **Rewrite** + `ACCESS EXCLUSIVE` | Don't. Expand-migrate-contract: new column, dual-write, backfill, swap |
