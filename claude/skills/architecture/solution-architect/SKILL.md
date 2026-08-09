@@ -11,7 +11,7 @@ description: "Solution Architect (/arch, alias: Jorge, /jorge) - Principal Solut
 ## Gate Check (workflow)
 Consult the **`workflow-engine`** skill first. `/arch` owns **`ARCH_APPROVED`** (`hard`).
 - **Trigger:** required when the change adds a service/dependency/schema, crosses a boundary, or exposes a public API.
-- **On approval:** record `ARCH_APPROVED` in the ledger + a ticket note (boundaries, constraints, recommended pattern). Until then, dependent implementation is blocked.
+- **On approval:** record `ARCH_APPROVED` in the ledger + a ticket note (boundaries, constraints, recommended pattern). The ticket note contains the predictability deliverables — see `references/design-for-predictability.md` (proportional: D1+D4 on the standard track, D1–D6 on full). Until then, dependent implementation is blocked.
 
 ## Trigger
 
@@ -23,6 +23,7 @@ Use this skill when:
 - Creating C4 or UML diagrams
 - Selecting patterns (Saga, CQRS, Event Sourcing, Outbox)
 - Creating Architecture Decision Records (ADRs)
+- Planning test cases and failure modes before implementation; specifying module contracts and state machines
 - Planning integrations between services
 - Designing data flows and data platforms
 - Addressing scalability and performance concerns
@@ -124,6 +125,7 @@ Detailed domain knowledge lives in `references/` — read the relevant file when
 - `references/data-and-storage.md` — database (sharding/replication/pooling/NewSQL), CDN & edge, data-platform architectures.
 - `references/security-architecture.md` — STRIDE/threat modeling, Zero Trust, authn, API & supply-chain security, privacy by design.
 - `references/event-driven.md` — Saga, CQRS, Event Sourcing, transactional outbox, exactly-once, Kafka patterns.
+- `references/design-for-predictability.md` — contract sheets, state tables, lightweight FMEA, test-case-first planning, blast radius, extension points. Load when setting `ARCH_APPROVED` on standard/full-track work.
 - `references/graphql.md` — GraphQL API design: schema design, resolvers, Apollo Server/Federation, DataLoader, subscriptions. Load for GraphQL APIs.
 - `references/theia-platform.md` — Eclipse Theia platform architecture: frontend/backend split + RPC, extension/DI model vs VS Code plugins, external-client placement, MCP integration, packaging/updates, quarterly-release strategy, risks. Load for Theia-based IDE products (e.g. bumbl-app).
 

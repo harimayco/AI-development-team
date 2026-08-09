@@ -4,7 +4,7 @@ This file provides context to Claude Code when working in this repository.
 
 ## Project Purpose
 
-This is a **reusable AI agent-team framework** — 38 agent skills (a 15-agent core team, optional specialists, and the cross-cutting process skills that sit at the top level of `claude/skills/`, including the `workflow-engine`), a proportional dev `workflow.yaml`, document templates, and the `install.sh` installer. Each skill file represents a team member with deep domain expertise. The skills are installed globally and used by every project. It is vendor-neutral and OSS-first, working in Claude Code / Cursor / Kiro / VS Code.
+This is a **reusable AI agent-team framework** — 40 agent skills (a 15-agent core team, optional specialists, auto-loading language skills, and the cross-cutting process skills that sit at the top level of `claude/skills/`, including the `workflow-engine`), a proportional dev `workflow.yaml`, document templates, and the `install.sh` installer. Each skill file represents a team member with deep domain expertise. The skills are installed globally and used by every project. It is vendor-neutral and OSS-first, working in Claude Code / Cursor / Kiro / VS Code.
 
 Its sibling agent-memory runtime — **Praxis** — lives in its own separate repository and consumes this shared agent layer, as does a separate governed knowledge backend. See `ARCHIVE.md` for the dashboard product that was previously carried here and set aside.
 
@@ -21,10 +21,10 @@ ai-dev-team/
 │   ├── CLAUDE.md          # Global instructions for Claude Code
 │   ├── TEAM_WORKFLOW.md   # Complete team workflow documentation
 │   │
-│   ├── skills/            # 38 agent skills: 15-agent core team + specialists + process skills
+│   ├── skills/            # 40 agent skills: 15-agent core team + specialists + language + process skills
 │   │   ├── management/    # Product Owner, Scrum Master, Business Analyst
 │   │   ├── architecture/  # Solution Architect, GraphQL
-│   │   ├── development/   # Backend (Java/Kotlin/Python), Frontend (React/Angular/Vue/Flutter), Native mobile
+│   │   ├── development/   # Backend, Frontend, Native mobile, Languages (Rust, SQL — auto-loading)
 │   │   ├── quality/       # Reviewers, Testers, Verify auditor
 │   │   ├── operations/    # DevOps, SecOps, MLOps, SRE
 │   │   ├── design/        # UI Designer, UX Research
@@ -103,7 +103,7 @@ Gates fire **proportionally** (by change-class / trigger / preset) via the `work
 - **Version**: 5.2.0 (see `CHANGELOG.md`)
 - **Release Date**: 2026-08-03
 - **Distribution**: Claude Code plugin (preferred; `version` omitted so the commit SHA is the version) or the universal `install.sh` for Cursor / Kiro / VS Code
-- **Skills**: 38 (15-agent core team + optional specialists + cross-cutting process skills; tech stacks as references)
+- **Skills**: 40 (15-agent core team + optional specialists + auto-loading language skills + cross-cutting process skills; frameworks as references)
 - **Commands**: 50 slash commands
 - **Templates**: 6 document templates
 - **Backends**: pluggable adapters — file-based by default; Jira/Confluence/OpenMemory/Penpot/etc. optional

@@ -277,6 +277,8 @@ Detailed review material lives in `references/` — read the relevant file when 
 - `references/backend-review.md` — backend (Java/Kotlin): SpotBugs, Checkstyle, SonarQube.
 - `references/frontend-review.md` — frontend (TypeScript/React): ESLint, accessibility.
 - `references/php-review.md` — PHP/Laravel: Psalm/PHPStan, Laravel idioms.
+- `../../../development/languages/rust/references/rust-review.md` — Rust: clippy gates, cargo-audit/cargo-deny, unsafe audit, failure-table-vs-tests check.
+- `../../../development/languages/sql/references/sql-review.md` — SQL & migrations: sqlfluff/squawk, injection greps, lock-aware DDL, EXPLAIN discipline.
 
 ## Security Scanners
 

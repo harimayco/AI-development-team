@@ -2,7 +2,7 @@
 
 > _Mirrors `CLAUDE.md` so editors that read `AGENTS.md` (Cursor, Kiro, VS Code) get identical guidance. References to "Claude Code" apply to your assistant._
 
-A team of 38 skills (a 15-agent core team + optional specialists, plus cross-cutting process skills) + an enforced, proportional dev workflow. Open-source, vendor-neutral, works in Claude Code / Cursor / Kiro / VS Code, free by default.
+A team of 40 skills (a 15-agent core team + optional specialists, plus auto-loading language skills and cross-cutting process skills) + an enforced, proportional dev workflow. Open-source, vendor-neutral, works in Claude Code / Cursor / Kiro / VS Code, free by default.
 
 > **Nothing loads this file automatically.** `install.sh` deploys only `skills/`, `commands/`,
 > `templates/` and `workflow/`, and generates its own pointer file at the destination; a plugin
@@ -43,7 +43,7 @@ Native files by default. Optional OSS memory MCP (OpenMemory / mem0). No memory 
 
 Two special-purpose agents sit outside the core 15: `/verify` (completion auditor / workflow gate) and `/kai` (self-improving meta-agent).
 
-Optional specialists (AI/LLM, Data, DBA, SRE, MLOps, UX research, Performance, Native mobile, Technical writer (`/tw`), …) load on demand. **Technology stacks are not separate agents** — a role agent detects the project's stack and loads the matching `references/<stack>.md` (Angular/Vue/Flutter/JavaFX → `/fe`; Kotlin/FastAPI/Laravel/Quarkus/Kafka/HMRC → `/be`; GraphQL → `/arch`; Terraform → `/devops`; Cucumber → `/e2e`; UK law/tax → `/legal`,`/fin`). Full roster: `/agents`. Role commands are standard; persona aliases invoke the same agent.
+Optional specialists (AI/LLM, Data, DBA, SRE, MLOps, UX research, Performance, Native mobile, Technical writer (`/tw`), …) load on demand. **Technology stacks are not separate agents** — a role agent detects the project's stack and loads the matching `references/<stack>.md` (Angular/Vue/Flutter/JavaFX → `/fe`; Kotlin/FastAPI/Laravel/Quarkus/Kafka/HMRC → `/be`; GraphQL → `/arch`; Terraform → `/devops`; Cucumber → `/e2e`; UK law/tax → `/legal`,`/fin`). The deliberate exception: **core languages are knowledge skills** — Rust and SQL (Postgres/MySQL/Oracle/SQLite dialect branches) live in `skills/development/languages/` and auto-load from context whenever that language is written or reviewed; no persona, no command, and the role agents route into them. Full roster: `/agents`. Role commands are standard; persona aliases invoke the same agent.
 
 ## Git
 Branch `feature/<KEY>-desc` · commit `<KEY>: message` · PR `<KEY>: title`. Run tests before committing.
