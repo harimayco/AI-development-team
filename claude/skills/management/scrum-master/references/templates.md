@@ -83,7 +83,7 @@
 **Depends On**: {other ticket IDs or "None"}
 **Source**: {investigation report, expert recommendation, user request}
 **Branch**: {exact branch name to create}
-**Claimed by**: {assignee — the ticket backend's assignee field is the lock; see `parallel-delivery`}
+**Claimed by**: {claimed_by — the worker currently implementing it; setting the tracker's assignee field to yourself is the lock, see `parallel-delivery`}
 
 ## Description
 {Clear, self-contained description of what needs to be done}

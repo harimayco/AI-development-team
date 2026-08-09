@@ -10,10 +10,10 @@
 | Story Points | {estimate} |
 | Sprint | {sprint_number} |
 | Epic | {epic_name} |
-| Owner | {assignee} |
+| Owner | {owner — accountable for the story's content} |
 | Status | Not Started / In Progress / In Review / Done |
 | Branch | {exact branch name to create} |
-| Claimed by | {assignee — the ticket backend's assignee field is the lock; see `parallel-delivery`} |
+| Claimed by | {claimed_by — the worker currently implementing it; setting the tracker's assignee field to yourself is the lock, see `parallel-delivery`} |
 
 ## User Story
 

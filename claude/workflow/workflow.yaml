@@ -88,7 +88,7 @@ presets:
     tickets: backlog_md
     knowledge_base: markdown
   parallel-team:
-    always_required: [CODE_REVIEWED]        # peer review always, by a different session than the implementer — see the `parallel-delivery` skill
+    always_required: [CODE_REVIEWED]        # peer review always; reviewer ≠ implementer is parallel-delivery policy, not enforced by this config
     default_track: by_change_class
     tickets: backlog_md
     knowledge_base: markdown
