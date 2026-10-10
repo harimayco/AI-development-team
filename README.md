@@ -168,9 +168,14 @@ settings (`Ctrl+Shift+P` → *Preferences: Open User Settings (JSON)*), then run
 }
 ```
 
-Building the package yourself: `python3 scripts/build-copilot-plugin.py` writes `copilot/`, which
-is gitignored because it is generated. Point VS Code at it with the local-development escape hatch
-instead of a marketplace:
+Building the package yourself: `python3 scripts/build-copilot-plugin.py` rewrites `copilot/`. That
+tree **is committed** — it has to be, because a marketplace `source` can only resolve against what
+is in the repository, so a gitignored package installs nowhere. It is still never edited by hand;
+CI rebuilds it and fails on any difference, which is what makes tracked generated output safe
+rather than a second copy that drifts.
+
+To hack on the package without publishing, point VS Code straight at your working copy with the
+local-development escape hatch:
 
 ```jsonc
 { "chat.pluginLocations": { "/absolute/path/to/AI-development-team/copilot": true } }
@@ -226,9 +231,9 @@ AI-development-team/
 │   │                            #   is an update
 │   ├── skills/                  # loaded as ai-dev-team:<name>, short aliases intact
 │   ├── commands/
-│   ├── templates/
+│   │   ├── templates/
 │   └── workflow/
-└── copilot/                     # ← the VS Code / Copilot plugin root, GENERATED — gitignored
+└── copilot/                     # ← the VS Code / Copilot plugin root (generated, committed)
     ├── plugin.json              # Agent Plugins 1.0 manifest, with a `version`
     ├── skills/                  # the same 43 skills, flattened to skills/<name>/
     └── com.github.copilot/
@@ -238,13 +243,14 @@ AI-development-team/
 
 `CLAUDE.md` and `AGENTS.md` at the plugin root are readable mirrors — a plugin cannot load either,
 so the always-on contract ships as the `ai-dev-team` skill instead.
-
 **Across editors**, the Copilot package is generated, so it is covered by the same rule: edit
 `claude/`, then re-run `scripts/build-copilot-plugin.py`. The generator is the only writer — it
 rebuilds `copilot/` from scratch on every run, so a hand edit there is lost rather than merged.
-`scripts/validate-framework.py` fails if the generated tree is stale, if the Copilot manifest
-declares an unsupported Agent Plugins version or an unknown top-level key, or if the counts
-documented above stop matching.
+`copilot/` is committed because it has to be installable, and the CI job that rebuilds it and
+diffs the result is what keeps a committed generated tree from becoming a second source of truth.
+`scripts/validate-framework.py` also fails if the tree is stale, if the Copilot manifest declares
+an unsupported Agent Plugins version or an unknown top-level key, or if the counts documented
+above stop matching.
 
 **Via `install.sh`**, content is copied (or symlinked with `--link`) into the target scope. Only
 `skills/`, `commands/`, `templates/` and `workflow/` are deployed; the instructions file is

@@ -76,11 +76,6 @@ docs/archive/
 id_rsa*
 id_ed25519*
 
-# The VS Code / Copilot plugin tree is generated from claude/ by
-# scripts/build-copilot-plugin.py. It is ignored rather than tracked so it
-# cannot become a second, hand-edited copy that drifts from the source.
-/copilot/
-
 # Root AGENTS.md is a machine-local context file: a connected agent-memory runtime
 # owns a managed block in it and refreshes that block with captured working memory,
 # which carries the same private-project detail the rules above exclude. Ignoring

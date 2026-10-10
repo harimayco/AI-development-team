@@ -1,0 +1,22 @@
+{
+  "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
+  "name": "ai-dev-team",
+  "version": "5.3.0",
+  "description": "Specialist agent team + enforced proportional workflow, with cross-cutting process skills for lifecycle, verification, review tiering, model selection and research method.",
+  "author": {
+    "name": "Oleh Svyrydov"
+  },
+  "homepage": "https://github.com/olehsvyrydov/AI-development-team",
+  "repository": "https://github.com/olehsvyrydov/AI-development-team",
+  "license": "MIT",
+  "keywords": [
+    "ai-team",
+    "multi-agent",
+    "agents",
+    "skills",
+    "workflow",
+    "code-review",
+    "tdd",
+    "orchestration"
+  ]
+}

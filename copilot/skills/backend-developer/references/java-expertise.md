@@ -1,0 +1,478 @@
+# Backend Stack — Java / Spring Ecosystem
+
+> **Language-level Java standards live in the java language skill** (`../../../../languages/java/SKILL.md`), which auto-loads whenever Java is written:
+> records/sealed modelling, JSpecify + NullAway, immutability, virtual-thread and concurrency doctrine, JUnit/ArchUnit/PIT testing, boundary security.
+> THIS file carries the Spring/backend ecosystem — framework, persistence, protocols, serialization, messaging, observability, build tooling —
+> and the numbered **Spring Boot 4 standards (S1–S10)** below.
+
+## Spring Boot 4 standards (S1–S10)
+
+Numbered so reviews and tickets can cite them. Violations are BLOCKING at review, the same way the language skill's J-standards are.
+
+**S1 — Target Spring Boot 4.1.x.** 4.1.0 went GA in June 2026 and OSS support for the 4.0 line ends December 2026 — new work starts on 4.1. The baseline is Spring Framework 7, Spring Security 7, Jakarta EE 11, and Jackson 3; Jackson 3's new package and artifact coordinates (`tools.jackson.*` — only the annotations stay at `com.fasterxml.jackson.annotation`) need a deliberate migration pass, not just a version bump.
+
+**S2 — Constructor injection only.** No field `@Autowired`; every dependency is a `final` constructor parameter. A bean whose constructor takes too many parameters is a design smell to fix by splitting the class — not a builder candidate.
+
+**S3 — Typed, validated configuration.** Bind config into `@ConfigurationProperties` records with `@Validated`, never scattered `@Value` strings. The application fails startup on invalid config instead of limping to a runtime error.
+
+**S4 — Outbound HTTP via `RestClient` or declarative `@HttpExchange` interfaces.** `RestTemplate` is prohibited in new code. Every client declares explicit connect/read timeouts and maps error statuses at the boundary — no default-timeout clients, no raw 4xx/5xx leaking into the domain.
+
+**S5 — One error contract.** RFC 9457 `ProblemDetail` everywhere; no ad-hoc error JSON shapes per controller.
+
+**S6 — API versioning via Framework 7's built-in mechanism** — the `version` attribute on `@RequestMapping`/`@GetMapping` plus a resolution strategy configured through `ApiVersionConfigurer` (there is no `@ApiVersion` annotation) — not hand-rolled URL surgery or bespoke header parsing.
+
+**S7 — Slice tests first.** `@WebMvcTest` / `@DataJpaTest` / the other slices carry the behaviour tests; `@SpringBootTest` exists to prove wiring, not to run the suite. Mock Spring beans with `@MockitoBean` — the Boot 4 replacement for the removed `@MockBean`.
+
+**S8 — Observability via Micrometer `@Observed` and the OpenTelemetry starter.** No hand-rolled instrumentation inside business methods — the aspect supplies the telemetry and the method stays business logic, the same rule as the AOP standard in `../SKILL.md`.
+
+**S9 — Application code is `@NullMarked`.** Spring Framework 7's APIs are JSpecify-annotated; marking your own packages lets the language skill's NullAway gate check the whole call chain instead of stopping at the framework boundary.
+
+**S10 — Security 7 idioms only.** Lambda-style `SecurityFilterChain` beans; passkeys/WebAuthn and MFA are first-class options to reach for. No `WebSecurityConfigurerAdapter`-era patterns.
+
+---
+
+## Expertise
+
+### Spring Ecosystem
+
+#### Spring Boot 4 / Spring Framework 7
+
+**New in Spring Framework 7 / Spring Boot 4:**
+- **Jakarta EE 11** baseline (Servlet 6.1, JPA 3.2)
+- **Java 17+ minimum**, optimized for Java 21+/25
+- **API Versioning** — built-in: the `version` attribute on request mappings + `ApiVersionConfigurer` strategy
+- **JSpecify Null Safety** — replacing Spring's `@Nullable` with JSpecify standard
+- **Jackson 3** — new `jackson-databind` with module changes
+- **Modular Auto-Configuration** — split into technology-specific modules
+- **Spring Security 7** — simplified security, MFA support, passkeys
+- **Kotlin 2.2 baseline** with K2 compiler support
+- **Declarative HTTP Clients** — `@HttpExchange` interface-based clients
+- **RestClient** — synchronous HTTP client replacing RestTemplate
+- **Spring Modulith** — modular monolith support with event-driven boundaries
+
+**Virtual threads on the Spring side:** `spring.threads.virtual.enabled=true` runs MVC request handling, `@Async`, and Boot's task executors on virtual threads (the thread and concurrency doctrine itself lives in the java language skill).
+
+#### Spring WebFlux (Reactive Stack)
+- **Project Reactor** — `Mono`, `Flux`, operators, error handling
+- **R2DBC** — reactive database connectivity (PostgreSQL, MySQL, Oracle)
+- **WebClient** — reactive HTTP client with retry, timeout, circuit breaker
+- **Server-Sent Events** — streaming responses
+- **Backpressure** — `onBackpressureBuffer()`, `onBackpressureDrop()`, `limitRate()`
+- **Context propagation** — `contextWrite()`, `deferContextual()`
+
+**When to choose WebFlux vs MVC:**
+| Factor | Spring MVC | Spring WebFlux |
+|--------|-----------|----------------|
+| Thread model | Thread-per-request (virtual threads) | Event loop (Reactor) |
+| Blocking I/O | Fine with virtual threads | Prohibited |
+| Learning curve | Lower | Higher |
+| Debugging | Simpler stack traces | Complex async traces |
+| Use case | Most applications | Streaming, very high concurrency |
+
+#### Spring Cloud 2025.1.0 (Oakwood)
+- **Spring Cloud Gateway** — API gateway with filters, rate limiting
+- **Spring Cloud Config** — centralized configuration
+- **Spring Cloud Circuit Breaker** — Resilience4j integration
+- **Spring Cloud Stream** — event-driven microservices (Kafka, RabbitMQ binders)
+- **Spring Cloud Kubernetes** — Kubernetes-native service discovery
+- **Spring Cloud OpenFeign** — declarative REST clients
+
+#### Spring Security 7
+- **SecurityFilterChain** — lambda-based configuration
+- **OAuth2 Resource Server** — JWT and opaque token validation
+- **OAuth2 Client** — authorization code, client credentials flows
+- **Method Security** — `@PreAuthorize`, `@PostAuthorize` with SpEL
+- **MFA Support** — multi-factor authentication
+- **Passkey/WebAuthn** — passwordless authentication
+- **CSRF/CORS** — proper configuration for SPAs
+
+#### Spring AI
+- **LLM Integration** — OpenAI, Gemini, Anthropic, Ollama
+- **Embeddings & Vector Stores** — PgVector, Redis, Chroma
+- **RAG (Retrieval Augmented Generation)** — document ingestion pipelines
+- **Function Calling** — tool/function execution from LLM
+
+---
+
+### Design Patterns — Deep Knowledge
+
+#### Creational Patterns
+| Pattern | When to Use | Java Implementation |
+|---------|------------|---------------------|
+| **Factory Method** | Create objects without specifying exact class | Interface + implementations, Spring `@Bean` |
+| **Abstract Factory** | Families of related objects | Factory interface with factory implementations |
+| **Builder** | Complex object construction | Lombok `@Builder`, records with builders |
+| **Singleton** | Single instance guarantee | Spring `@Component` (default scope), `enum` singleton |
+| **Prototype** | Clone existing objects | `Cloneable`, copy constructors, `record.with()` |
+
+#### Structural Patterns
+| Pattern | When to Use | Java Implementation |
+|---------|------------|---------------------|
+| **Adapter** | Incompatible interface bridging | Wrapper class, Spring `HandlerAdapter` |
+| **Bridge** | Decouple abstraction from implementation | Interface + implementation hierarchies |
+| **Composite** | Tree structures | Recursive component interface |
+| **Decorator** | Add behavior dynamically | Wrapping (Spring `@Transactional`, `@Cacheable`) |
+| **Facade** | Simplified interface to subsystem | Service layer over repositories |
+| **Proxy** | Control access to objects | Spring AOP, JDK dynamic proxy, CGLIB |
+
+#### Behavioral Patterns
+| Pattern | When to Use | Java Implementation |
+|---------|------------|---------------------|
+| **Strategy** | Interchangeable algorithms | Interface + `@Component` implementations, `Map<String, Strategy>` |
+| **Observer** | Event notification | Spring `ApplicationEventPublisher`, `@EventListener` |
+| **Template Method** | Algorithm skeleton with customizable steps | Abstract class with `final` template method |
+| **Command** | Encapsulate requests as objects | Command interface, undo/redo stacks |
+| **Chain of Responsibility** | Pass request along handler chain | Spring `Filter` chain, `HandlerInterceptor` |
+| **State** | Object behavior changes with state | State interface + state implementations |
+| **Mediator** | Reduce direct dependencies between components | Spring `ApplicationEventPublisher` as mediator |
+| **Iterator** | Sequential access to collection | `Iterable<T>`, `Stream<T>`, reactive `Flux<T>` |
+| **Visitor** | Add operations to object structures | Double dispatch, sealed class + pattern matching |
+
+#### Architectural Patterns
+| Pattern | When to Use | Key Principle |
+|---------|------------|---------------|
+| **Hexagonal (Ports & Adapters)** | Clean domain isolation | Domain core has NO framework dependencies |
+| **Clean Architecture** | Layered with dependency rule | Dependencies point inward only |
+| **CQRS** | Separate read/write models | Different models for queries vs commands |
+| **Event Sourcing** | Audit trail, temporal queries | Store events, not state |
+| **Domain-Driven Design** | Complex business domains | Aggregates, Value Objects, Domain Events |
+| **Microservices** | Independent deployment/scaling | Bounded contexts, API contracts |
+| **Modular Monolith** | Start simple, split later | Spring Modulith event boundaries |
+
+---
+
+### Distributed System Patterns — Expert Knowledge
+
+#### Communication Patterns
+| Pattern | Description | Implementation |
+|---------|-------------|----------------|
+| **API Gateway** | Single entry point for clients | Spring Cloud Gateway, Kong |
+| **Service Mesh** | Infrastructure-level communication | Istio sidecar, Linkerd |
+| **Backend for Frontend (BFF)** | API tailored per client type | Separate gateway per client |
+| **Async Messaging** | Decouple via message broker | Kafka, RabbitMQ, Redis Streams |
+
+#### Data Management Patterns
+| Pattern | Description | When |
+|---------|-------------|------|
+| **Saga** | Distributed transaction via compensating actions | Cross-service business transactions |
+| **Transactional Outbox** | Reliable event publishing with DB transaction | Ensure exactly-once event delivery |
+| **CQRS** | Separate command/query responsibility | High-read/write ratio, different query needs |
+| **Event Sourcing** | Store state changes as events | Audit trails, temporal queries, replay |
+| **Database per Service** | Each service owns its data | Microservice data isolation |
+| **Shared Database** | Multiple services share one DB | Monolith-to-micro migration interim |
+
+**Saga Pattern — Orchestration vs Choreography:**
+```
+Orchestration: Central coordinator manages saga steps
+  OrderService → [SagaOrchestrator] → PaymentService → InventoryService → ShippingService
+  On failure: Orchestrator calls compensating actions in reverse
+
+Choreography: Each service listens and reacts to events
+  OrderCreated → PaymentProcessed → InventoryReserved → OrderShipped
+  On failure: Each service publishes compensating event
+```
+
+**Transactional Outbox Pattern:**
+```
+1. Business operation + outbox insert in SAME DB transaction
+2. Polling publisher (or CDC) reads outbox table
+3. Publishes event to Kafka
+4. Marks outbox row as published
+
+Table: outbox (id, aggregate_type, aggregate_id, event_type, payload, created_at, published_at)
+```
+
+#### Failure Handling Patterns
+| Pattern | Description | Tool |
+|---------|-------------|------|
+| **Circuit Breaker** | Prevent cascade failures | Resilience4j `@CircuitBreaker` |
+| **Retry with Backoff** | Transient failure recovery | Resilience4j `@Retry`, Spring Retry |
+| **Bulkhead** | Isolate failure domains | Resilience4j `@Bulkhead`, thread pools |
+| **Dead Letter Queue** | Handle poison messages | Kafka DLT, RabbitMQ DLX |
+| **Timeout** | Bound wait time | WebClient timeout, Resilience4j `@TimeLimiter` |
+
+#### Scaling Patterns
+| Pattern | Description | When |
+|---------|-------------|------|
+| **Horizontal Scaling** | Add more instances | Stateless services |
+| **Sharding** | Partition data across nodes | Large datasets, geographic distribution |
+| **CQRS with Read Replicas** | Scale reads independently | Read-heavy workloads |
+| **Event-Driven Autoscaling** | Scale on queue depth | Kafka consumer lag → KEDA |
+
+---
+
+### Database Expertise
+
+#### PostgreSQL (Primary RDBMS)
+- **Advanced SQL**: CTEs, window functions (`ROW_NUMBER`, `RANK`, `LAG`, `LEAD`), lateral joins, recursive queries
+- **JSON/JSONB**: `jsonb_path_query`, GIN indexes, JSON schema validation
+- **Full-Text Search**: `tsvector`, `tsquery`, GiST/GIN indexes, ranking
+- **Partitioning**: Range, list, hash partitioning for large tables
+- **PL/pgSQL**: Stored procedures, triggers, custom functions
+- **Extensions**: PostGIS (geospatial), pgvector (embeddings), pg_cron (scheduling), pgcrypto
+- **Performance**: `EXPLAIN ANALYZE`, index strategies (B-tree, Hash, GIN, GiST, BRIN), `pg_stat_statements`
+- **Replication**: Streaming replication, logical replication, pgBouncer connection pooling
+- **R2DBC**: `r2dbc-postgresql` for reactive access
+- **JPA/Hibernate**: Entity mapping, query optimization, batch operations, second-level cache
+
+#### MongoDB
+- **Document Design**: Embedding vs referencing, schema validation
+- **Aggregation Pipeline**: `$match`, `$group`, `$lookup`, `$unwind`, `$facet`
+- **Indexing**: Compound, multikey, text, geospatial, wildcard, TTL indexes
+- **Change Streams**: Real-time data change notification
+- **Transactions**: Multi-document ACID transactions
+- **Spring Data MongoDB**: `MongoTemplate`, `ReactiveMongoTemplate`, repository abstractions
+- **Atlas**: Managed clusters, search indexes, vector search
+
+#### MySQL
+- **InnoDB**: Row-level locking, MVCC, foreign keys, tablespace management
+- **Query Optimization**: `EXPLAIN`, index hints, query cache, optimizer trace
+- **Replication**: Source-replica, group replication, InnoDB Cluster
+- **Partitioning**: Range, hash, key, list partitioning
+- **JSON Support**: `JSON_EXTRACT()`, `JSON_TABLE()`, generated columns
+- **Spring Data JPA**: Standard repository abstractions, native queries
+
+#### OracleDB
+- **PL/SQL**: Procedures, packages, triggers, bulk operations
+- **Advanced Features**: Materialized views, database links, flashback queries
+- **Partitioning**: Range, hash, list, composite, interval partitioning
+- **Performance**: AWR reports, SQL profiles, result cache, parallel execution
+- **RAC**: Real Application Clusters for high availability
+- **Spring Data JPA**: Oracle dialect, sequence generators, LOB handling
+
+#### Redis
+- **Data Structures**: Strings, hashes, lists, sets, sorted sets, streams, HyperLogLog
+- **Caching Patterns**: Cache-aside, write-through, write-behind, refresh-ahead
+- **Pub/Sub**: Real-time messaging, pattern subscriptions
+- **Redis Streams**: Event streaming, consumer groups, acknowledgment
+- **Lua Scripts**: Atomic operations, rate limiting, distributed locks
+- **Spring Data Redis**: `RedisTemplate`, `ReactiveRedisTemplate`, `@Cacheable`
+- **Cluster**: Redis Cluster, Sentinel for HA
+
+#### Database Migrations
+- **Flyway**: SQL-based migrations, versioned + repeatable, Java callbacks, undo migrations
+- **Liquibase**: XML/YAML/JSON changelogs, preconditions, rollback support
+
+---
+
+### Protocols — Expert Knowledge
+
+#### gRPC
+- **Protocol Buffers (proto3)**: Service/message definition, code generation
+- **Communication Styles**: Unary, server streaming, client streaming, bidirectional streaming
+- **Spring gRPC**: `spring-grpc-spring-boot-starter`, `@GrpcService`, `@GrpcClient`
+- **Error Handling**: gRPC status codes, `StatusRuntimeException`, error details
+- **Interceptors**: Authentication, logging, metrics, deadline propagation
+- **Load Balancing**: Client-side (round-robin, pick-first), xDS for service mesh
+- **Health Checking**: gRPC health checking protocol
+
+#### HTTP/2 & HTTP/3
+- **Multiplexing**: Multiple streams over single connection
+- **Server Push**: Proactive resource sending
+- **Header Compression**: HPACK (HTTP/2), QPACK (HTTP/3)
+- **QUIC**: UDP-based transport for HTTP/3
+
+#### SOAP
+- **WSDL**: Service contracts, operations, message definitions
+- **JAX-WS**: `@WebService`, `@WebMethod`, JAXB binding
+- **Spring WS**: `WebServiceTemplate`, endpoint mapping, interceptors
+- **WS-Security**: Message-level encryption, digital signatures
+- **MTOM**: Binary attachment optimization
+
+#### REST
+- **Richardson Maturity Model**: Level 0-3 (POX → Resources → HTTP Verbs → HATEOAS)
+- **Best Practices**: Resource naming, pagination (cursor/offset), filtering, sorting
+- **Versioning**: URI path (`/v2/`), header (`Accept-Version`), media type
+- **Error Handling**: RFC 9457 Problem Details, consistent error format
+- **HATEOAS**: `spring-hateoas`, `EntityModel`, `CollectionModel`, link relations
+- **OpenAPI 3.1**: Specification-first design, code generation with `openapi-generator`
+- **Content Negotiation**: JSON, XML, HAL, Protocol Buffers
+
+#### GraphQL
+- **Schema-first**: SDL type definitions, queries, mutations, subscriptions
+- **Spring for GraphQL**: `@QueryMapping`, `@MutationMapping`, `@SchemaMapping`
+- **DataLoader**: N+1 prevention via batching
+- **Subscriptions**: WebSocket-based real-time updates
+- **Federation**: Apollo Federation for microservice schemas
+
+---
+
+### Serialization Formats
+
+#### Apache Avro
+- **Schema Evolution**: Backward/forward compatible schema changes
+- **Compact Binary**: Smaller than JSON, schema included in file header
+- **Schema Registry**: Confluent Schema Registry for Kafka integration
+- **Spring Kafka**: `KafkaAvroSerializer`/`KafkaAvroDeserializer`
+- **Use Cases**: Kafka events, data lake storage, ETL pipelines
+
+#### Protocol Buffers (Protobuf)
+- **Proto3 Syntax**: Messages, enums, oneof, maps, well-known types
+- **Code Generation**: `protobuf-maven-plugin`, `protobuf-gradle-plugin`
+- **gRPC Integration**: Native serialization format for gRPC services
+- **Backward Compatibility**: Field numbering rules, `reserved` keyword
+- **Use Cases**: gRPC APIs, inter-service communication, mobile APIs
+
+#### JSON
+- **Jackson 3**: ObjectMapper, modules, annotations, custom serializers
+- **JSON Schema**: Validation, documentation, code generation
+- **JSON Patch (RFC 6902)**: Partial updates with operations array
+- **JSON Merge Patch (RFC 7386)**: Simpler partial updates
+
+---
+
+### Observability & Infrastructure
+
+#### Metrics & Monitoring
+- **Micrometer**: Metrics facade (counters, gauges, timers, distribution summaries)
+- **Prometheus**: Pull-based metrics collection, PromQL queries, alerting rules
+- **Grafana**: Dashboard creation, visualization, alerting, annotations
+- **Spring Boot Actuator**: `/actuator/prometheus`, `/actuator/health`, `/actuator/info`
+- **Custom Metrics**: `@Timed`, `@Counted`, `MeterRegistry` programmatic API
+- **Alert Manager**: Alert routing, grouping, silencing, notification (Slack, PagerDuty, email)
+- **OpenTelemetry**: Traces, metrics, logs unified collection
+
+#### Distributed Tracing
+- **Micrometer Tracing**: `@Observed`, `ObservationRegistry`, trace/span IDs
+- **Propagation**: W3C Trace Context, B3 (Zipkin), automatic header propagation
+- **Exporters**: Jaeger, Zipkin, OTLP (OpenTelemetry Protocol)
+
+#### Structured Logging
+- **SLF4J + Logback**: MDC for correlation, structured JSON output
+- **Log Levels**: ERROR (system failures), WARN (recoverable), INFO (business events), DEBUG (developer)
+- **ELK Stack**: Elasticsearch + Logstash + Kibana for log aggregation
+- **Loki**: Grafana-native log aggregation with LogQL
+
+#### Container & Orchestration
+- **Docker**: Multi-stage builds, distroless/eclipse-temurin base images, layer caching, BuildKit, Spring Boot layered JARs
+- **Kubernetes (K8S)**: Deployments, Services, ConfigMaps, Secrets, HPA, PDB, health probes (liveness/readiness/startup)
+- **Helm**: Chart templating, values.yaml, dependencies, hooks, rollback
+- **ArgoCD**: GitOps continuous delivery, application sync, rollback, multi-cluster
+- **AWS**: ECS/EKS, RDS, ElastiCache, SQS/SNS, Lambda, CloudWatch, IAM, Secrets Manager
+- **GCP**: GKE, Cloud SQL, Memorystore, Pub/Sub, Cloud Run, Cloud Monitoring
+
+---
+
+### Messaging & Event Streaming
+
+#### Apache Kafka
+- **Producers**: `KafkaTemplate`, `ReactiveKafkaProducerTemplate`, idempotent/transactional producers
+- **Consumers**: `@KafkaListener`, `ReactiveKafkaConsumerTemplate`, consumer groups, rebalancing
+- **Exactly-Once**: Transactional producers + idempotent consumers + read_committed isolation
+- **Dead Letter Topics (DLT)**: `DefaultErrorHandler`, `DeadLetterPublishingRecoverer`
+- **Schema Evolution**: Avro + Schema Registry, compatibility modes (backward/forward/full)
+- **Kafka Streams**: Stateful processing, KTable, windowed aggregations
+- **Connect**: Source/sink connectors, Debezium CDC
+- **Spring Cloud Stream**: Binder-based abstraction over Kafka/RabbitMQ
+
+#### Redis Pub/Sub & Streams
+- **Pub/Sub**: `RedisMessageListenerContainer`, pattern-based subscriptions
+- **Streams**: Consumer groups, XADD/XREAD, acknowledgment, pending entries
+
+---
+
+### Build Tools — Expert Knowledge
+
+#### Maven
+- **POM Structure**: Parent POM, BOM imports, dependency management
+- **Lifecycle**: `validate` → `compile` → `test` → `package` → `verify` → `install` → `deploy`
+- **Multi-Module**: Reactor build order, `-pl` selective builds, `-am` also-make
+- **Plugins**: `maven-compiler-plugin` (Java 25; `--enable-preview` only under the java language skill's recorded preview opt-in — never as a default), `maven-surefire-plugin`, `maven-failsafe-plugin`, `spring-boot-maven-plugin`, `jib-maven-plugin`, `protobuf-maven-plugin`
+- **Profiles**: Environment-specific configs, activation strategies
+- **Dependency Management**: Version locking, BOM imports, exclusions, optional dependencies
+- **Repository Management**: Nexus/Artifactory, mirror configuration
+
+#### Gradle (Kotlin DSL)
+- **Build Scripts**: `build.gradle.kts`, `settings.gradle.kts`, convention plugins
+- **Task Graph**: Task dependencies, custom tasks, `doFirst`/`doLast`, up-to-date checks
+- **Dependency Management**: Version catalogs (`libs.versions.toml`), platforms, constraints
+- **Multi-Project**: `includeBuild`, project dependencies, composite builds
+- **Plugins**: `org.springframework.boot`, `io.spring.dependency-management`, `com.google.protobuf`, `jib`, `com.diffplug.spotless`
+- **Build Cache**: Local/remote caching, CI optimization
+- **Build Scans**: Performance analysis, dependency insights
+
+---
+
+### Scripting — Expert Knowledge
+
+#### Bash
+- **Shell Scripts**: POSIX-compliant scripts, `set -euo pipefail`, error handling, trap signals
+- **Text Processing**: `awk`, `sed`, `grep`, `cut`, `sort`, `uniq`, `xargs`, `jq` for JSON
+- **Process Management**: Background jobs, `nohup`, process substitution, named pipes (FIFOs)
+- **Automation**: Build scripts, deployment pipelines, log rotation, health checks, cron jobs
+- **Best Practices**: ShellCheck-clean scripts, functions, local variables, meaningful exit codes
+- **Advanced**: Associative arrays, here-docs, parameter expansion (`${var:-default}`), `find -exec`
+
+#### Python
+- **Scripting**: File manipulation, CSV/JSON processing, API interaction, data transformation
+- **CLI Tools**: `argparse`, `click`, `typer` for command-line interfaces
+- **Automation**: `subprocess`, `pathlib`, `shutil`, `os` for system tasks
+- **HTTP**: `requests`, `httpx` for API scripting and health checks
+- **Data**: `pandas` for data analysis, `pyyaml` for config processing
+- **Testing**: `pytest` for script validation
+
+### Linux — Expert Knowledge
+
+#### System Administration
+- **Process Management**: `ps`, `top`, `htop`, `kill`, `nice`, `renice`, signals, `/proc` filesystem
+- **Service Management**: `systemd` (units, timers, journal), `systemctl`, `journalctl`
+- **User & Permissions**: `chmod`, `chown`, ACLs, `setfacl`, sudoers, PAM
+- **Filesystem**: `ext4`, `xfs`, `lvm`, `mount`, `fstab`, `df`, `du`, `fdisk`, `lsblk`
+- **Scheduling**: `cron`, `crontab`, systemd timers, `at`
+
+#### Networking
+- **Diagnostics**: `ss`, `netstat`, `curl`, `wget`, `dig`, `nslookup`, `traceroute`, `ping`, `nmap`
+- **Configuration**: `ip`, `ifconfig`, `iptables`/`nftables`, firewalld, `ufw`
+- **Services**: `nginx`, `haproxy` configuration, SSL/TLS certificates (`certbot`, `openssl`)
+- **Tunneling**: SSH tunnels (`-L`, `-R`, `-D`), port forwarding, `sshd_config` hardening
+
+#### Performance & Troubleshooting
+- **Monitoring**: `vmstat`, `iostat`, `sar`, `dstat`, `strace`, `lsof`, `perf`
+- **Memory**: `free`, `/proc/meminfo`, OOM killer tuning, swap configuration
+- **Disk I/O**: `iotop`, `blktrace`, scheduler tuning
+- **JVM on Linux**: `jstat`, `jstack`, `jmap`, `/proc/<pid>/`, cgroup memory limits for containers
+
+---
+
+### Testing — Spring stack
+
+#### Integration Testing
+- **Spring Test Slices**: `@WebMvcTest`, `@WebFluxTest`, `@DataJpaTest`, `@DataR2dbcTest`, `@DataMongoTest`
+- **Testcontainers**: `@Testcontainers`, `@Container`, `@ServiceConnection`
+- **WireMock**: HTTP API stubbing, `@WireMockTest`, verification, record-playback
+- **`@SpringBootTest`**: Full context with `WebEnvironment.RANDOM_PORT` — wiring only (S7)
+- **Test Configuration**: `@TestConfiguration`, `@Import`, test property overrides
+
+#### Reactive Testing
+- **StepVerifier**: `StepVerifier.create(flux).expectNext().verifyComplete()`
+- **`@WebFluxTest`**: Controller slice testing with `WebTestClient`
+- **Virtual Time**: `StepVerifier.withVirtualTime()` for time-dependent tests
+
+#### Contract Testing
+- **Spring Cloud Contract**: Producer-driven contracts, stub generation
+- **Pact**: Consumer-driven contract testing
+
+#### Spring Test Practices
+1. **WireMock stubs in `src/test/resources/wiremock/`** for shared API mocking
+2. **Testcontainers with `@ServiceConnection`** for zero-config database tests
+3. **`@MockitoBean`** (Spring Boot 4) instead of the removed `@MockBean`
+
+---
+
+## "Decide-once" state transitions via optimistic lock
+
+For a workflow where a row moves from a pending state to a terminal one exactly once (approve/reject, claim, settle), do **not** use an `if (status == PENDING)` read-then-write — it races. Use three pieces:
+
+1. **Fetch with the guard baked in:** `findByIdAndStatus(id, PENDING)` — a non-pending row is invisible, so you can map "missing" (404) vs "already decided" (409) with a second by-id lookup.
+2. **A `@Version` column** so the flush of a concurrent second decision fails its version check and rolls back — no double-apply, no duplicate side-effect (e.g. a second audit row).
+3. **In the migration declare the version column `NOT NULL DEFAULT 0`** so inserts that bypass the ORM (seed scripts, data fixes, other services) still satisfy the version contract.
+
+Map the optimistic-lock failure / invalid transition to **409 Conflict**, not 500. Test it: decide once (200), decide again (409).
+
+## Advisory side-effects must degrade gracefully (the inverse of the audit rule)
+
+Audit-critical writes should **fail loud** (throw if a load-bearing audit/event write fails). The opposite rule applies to **advisory** side-effects — cost receipts, telemetry, usage counters that are not the main result of the operation:
+
+- **Never throw out of the core evaluation for an advisory write.** Catch + log; the primary result must still return. (Don't copy the fail-loud audit rule onto a telemetry path.)
+- **Skip rather than fabricate an FK.** When a required foreign key for the optional write is absent (e.g. an attribution user/space id isn't available), **skip** the write rather than invent a synthetic id that orphans the row or violates the constraint. Make the skip observable (log once at startup / debug), and prefer a config that supplies a real system id when the write is wanted by default.
+

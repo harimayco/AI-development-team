@@ -89,6 +89,7 @@ MARKETPLACE: dict = {
 
 NAME = re.compile(r"^[a-z0-9]+(?:-[a-z0-9]+)*$")
 FRONTMATTER = re.compile(r"\A---\r?\n(.*?)\r?\n---\r?\n", re.DOTALL)
+MD_LINK = re.compile(r"\]\(([^)#\s]+\.md)(#[^)]*)?\)")
 
 failures: list[str] = []
 
@@ -110,13 +111,73 @@ def frontmatter(path: Path) -> dict:
     return data if isinstance(data, dict) else {}
 
 
+def rebase(text: str, source: Path, name: str, depth: int) -> str:
+    """Rewrite cross-skill relative links for the flattened layout.
+
+    Skills link each other by climbing out of their own category
+    (`../../../ai/ai-engineer/references/rag-patterns.md`). That resolves only
+    while the category nesting is there. Flattening to `skills/<name>/` removes
+    two or three levels, so the same link points one directory too shallow and
+    the whole set 404s -- silently, because nothing renders markdown links at
+    build time.
+
+    `depth` is the file's depth *inside the package* (`skills/<name>/` is 1, a
+    file in its `references/` is 2), not its depth in the source tree. Using the
+    source depth yields links that are self-consistently plausible and resolve
+    to nothing.
+    """
+    skills = SRC / "skills"
+
+    def fix(match: re.Match) -> str:
+        target = match.group(1)
+        if target.startswith(("http://", "https://", "mailto:", "/")) or "{" in target:
+            return match.group(0)
+        if not target.startswith(".."):
+            return match.group(0)  # same-skill link; the whole tree moved together
+        try:
+            resolved = (source / target).resolve()
+        except OSError as exc:
+            fail(f"{source.relative_to(ROOT)} -> {target}: cannot resolve -- {exc}")
+            return match.group(0)
+        try:
+            rel = resolved.relative_to(skills.resolve())
+        except ValueError:
+            fail(
+                f"{source.relative_to(ROOT)} -> {target}: resolves outside claude/skills/, so it "
+                f"cannot be expressed inside the Copilot package"
+            )
+            # Leave the link exactly as it was. Reported above; mangling it here
+            # would produce a second, confusing failure at the same site.
+            return match.group(0)
+        # The mirror is flat, so the category prefix has to go: the source path
+        # `development/ai/ai-engineer/references/x.md` becomes
+        # `ai-engineer/references/x.md`. Keep from the last SKILL.md-bearing
+        # ancestor onward -- that directory is the skill name.
+        parts = rel.parts
+        split = 0
+        for index in range(len(parts), 0, -1):
+            if (skills / Path(*parts[:index]) / "SKILL.md").exists():
+                split = index - 1
+                break
+        return f"]({'../' * depth}{Path(*parts[split:]).as_posix()}{match.group(2) or ''})"
+
+    return MD_LINK.sub(fix, text)
+
+
+
+
+def write(path: Path, text: str) -> None:
+    path.write_text(text, encoding="utf-8", newline="\n")
+
+
 def build_skills() -> int:
     """Flatten skills/<anything...>/<name>/SKILL.md to skills/<name>/.
 
     Copilot requires the directory name to equal the frontmatter `name` and
     silently skips the skill otherwise, so the frontmatter wins and a directory
     mismatch is reported rather than papered over. Everything else in a skill
-    directory (references/, nested reference packs) is copied verbatim.
+    directory (references/, nested reference packs) is copied verbatim, except
+    for the relative links rebased above.
     """
     out = DEST / "skills"
     count = 0
@@ -139,9 +200,20 @@ def build_skills() -> int:
         if target.exists():
             fail(f"duplicate skill name {name!r}")
             continue
-        shutil.copytree(path.parent, target)
+        for source in sorted(path.parent.rglob("*")):
+            if source.is_dir():
+                continue
+            rel = source.relative_to(path.parent)
+            dest = target / rel
+            dest.parent.mkdir(parents=True, exist_ok=True)
+            if source.suffix == ".md":
+                # Depth inside the package: skills/<name>/<rel> -> 1 + len(rel) - 1
+                write(dest, rebase(source.read_text(encoding="utf-8"), source.parent, name, len(rel.parts)))
+            else:
+                shutil.copy2(source, dest)
         count += 1
     return count
+
 
 
 def rewrite_commands() -> int:
