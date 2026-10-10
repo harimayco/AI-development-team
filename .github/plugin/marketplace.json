@@ -1,0 +1,31 @@
+{
+  "name": "aidevteam",
+  "owner": {
+    "name": "Oleh Svyrydov"
+  },
+  "metadata": {
+    "description": "The AI Dev Team agent framework.",
+    "version": "5.3.0"
+  },
+  "plugins": [
+    {
+      "name": "ai-dev-team",
+      "source": "./copilot",
+      "description": "Specialist agent team + enforced proportional workflow, with cross-cutting process skills for lifecycle, verification, review tiering, model selection and research method.",
+      "version": "5.3.0",
+      "author": {
+        "name": "Oleh Svyrydov"
+      },
+      "homepage": "https://github.com/olehsvyrydov/AI-development-team",
+      "repository": "https://github.com/olehsvyrydov/AI-development-team",
+      "license": "MIT",
+      "keywords": [
+        "agents",
+        "skills",
+        "workflow",
+        "code-review",
+        "tdd"
+      ]
+    }
+  ]
+}

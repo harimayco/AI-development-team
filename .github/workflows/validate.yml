@@ -57,6 +57,38 @@ jobs:
       - name: Validate the plugin
         run: claude plugin validate ./claude
 
+  copilot-plugin:
+    name: copilot plugin builds
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install PyYAML
+        run: pip install --quiet pyyaml
+
+      # The Copilot package is generated, so it is not in the checkout. Build it
+      # and gate the result: an unsupported Agent Plugins version rejects the
+      # plugin outright, and an unknown top-level key is ignored at load, which
+      # presents as "installed but no agents" rather than as a failure.
+      - name: Build the Copilot package
+        run: python3 scripts/build-copilot-plugin.py
+
+      - name: Gates against the built package
+        run: python3 scripts/validate-framework.py
+
+      # Proves the generated tree is reproducible rather than merely present:
+      # a second build must produce byte-identical output, or something in the
+      # build is reading state outside claude/.
+      - name: The build is deterministic
+        run: |
+          cp -r copilot /tmp/copilot-first
+          python3 scripts/build-copilot-plugin.py
+          diff -r /tmp/copilot-first copilot
+
   installer:
     name: install.sh still works
     runs-on: ubuntu-latest

@@ -115,7 +115,7 @@ runs here.
 
 To try it before declaring it: `claude --plugin-dir ./claude` from a clone of this repository.
 
-**Any editor — the installer.** Still supported, and the only path for Cursor, Kiro and VS Code.
+**Any editor — the installer.** Still supported, and the only path for Cursor and Kiro.
 
 ```bash
 git clone https://github.com/olehsvyrydov/AI-development-team.git
@@ -143,6 +143,57 @@ config for each — no lock-in:
 
 Optional advanced Claude backends (Atlassian, memory MCP, hooks): `scripts/setup-claude-backends.sh`.
 
+**VS Code / GitHub Copilot — as a plugin.** A second, generated package in the same repository,
+built from `claude/` by `scripts/build-copilot-plugin.py`. It is an
+[Agent Plugins 1.0](https://agent-plugins.org) package, so it works in VS Code, the Copilot CLI,
+and any other client that reads that format.
+
+Add the marketplace, then install:
+
+```bash
+# Copilot CLI
+copilot plugin marketplace add olehsvyrydov/AI-development-team
+copilot plugin install ai-dev-team
+```
+
+In VS Code, add `olehsvyrydov/AI-development-team` to `chat.plugins.marketplaces` in your user
+settings (`Ctrl+Shift+P` → *Preferences: Open User Settings (JSON)*), then run
+**Chat: Install Plugin From Source** from the Command Palette.
+
+```jsonc
+// VS Code settings.json
+{
+  "chat.plugins.enabled": true,
+  "chat.plugins.marketplaces": ["olehsvyrydov/AI-development-team"]
+}
+```
+
+Building the package yourself: `python3 scripts/build-copilot-plugin.py` writes `copilot/`, which
+is gitignored because it is generated. Point VS Code at it with the local-development escape hatch
+instead of a marketplace:
+
+```jsonc
+{ "chat.pluginLocations": { "/absolute/path/to/AI-development-team/copilot": true } }
+```
+
+**What the Copilot package provides** <!-- copilot-counts: skills=43 agents=50 commands=50 --> —
+43 skills, 50 custom agents (`/max`, `/jorge`, `/finn` … in the agent picker), and 50 slash
+commands (`/po`, `/arch`, `/rev` … in chat, matching Claude's). Skills resolve
+`skills/<name>/SKILL.md`, so this mirror is one flat level where `claude/` is nested by category —
+every skill keeps its `references/` tree, unchanged.
+
+Both packages ship from the same source, so behaviour is identical. The differences are packaging
+only:
+
+| | Claude Code | VS Code / Copilot |
+|---|---|---|
+| Plugin root | `claude/` | `copilot/` |
+| Manifest | `.claude-plugin/plugin.json` | `plugin.json` (Agent Plugins 1.0) |
+| Version | commit SHA (`version` deliberately omitted) | `version` field, bumped per release |
+| Commands | `commands/` | `com.github.copilot/commands/` |
+| Agents | commands double as personas | `com.github.copilot/agents/*.agent.md` |
+| Always-on instructions | `ai-dev-team` skill | `AGENTS.md` + `ai-dev-team` skill |
+
 ### 2. Verify
 
 ```bash
@@ -151,6 +202,10 @@ Optional advanced Claude backends (Atlassian, memory MCP, hooks): `scripts/setup
 /po             # Start with Product Owner
 /arch           # Get architecture review
 ```
+
+In VS Code, open Copilot Chat and try the same names — `/po`, `/arch`, `/rev` are commands after
+**Copilot: Install Plugin** offers the team. Or pick a named persona from the agent dropdown
+(`Max`, `Jorge`, `Finn` …). `GitHub Copilot: List Agents` confirms the team loaded.
 
 ---
 
@@ -162,19 +217,34 @@ Optional advanced Claude backends (Atlassian, memory MCP, hooks): `scripts/setup
 AI-development-team/
 ├── .claude-plugin/
 │   └── marketplace.json         # the catalogue — points at ./claude
-└── claude/                      # ← the plugin root
-    ├── .claude-plugin/
-    │   └── plugin.json          # the manifest. `version` is deliberately omitted,
-    │                            #   so the commit SHA is the version and every push
-    │                            #   is an update
-    ├── skills/                  # loaded as ai-dev-team:<name>, short aliases intact
-    ├── commands/
-    ├── templates/
-    └── workflow/
+├── .github/plugin/
+│   └── marketplace.json         # the same catalogue for VS Code / Copilot — points at ./copilot
+├── claude/                      # ← the Claude plugin root (source of truth)
+│   ├── .claude-plugin/
+│   │   └── plugin.json          # the manifest. `version` is deliberately omitted,
+│   │                            #   so the commit SHA is the version and every push
+│   │                            #   is an update
+│   ├── skills/                  # loaded as ai-dev-team:<name>, short aliases intact
+│   ├── commands/
+│   ├── templates/
+│   └── workflow/
+└── copilot/                     # ← the VS Code / Copilot plugin root, GENERATED — gitignored
+    ├── plugin.json              # Agent Plugins 1.0 manifest, with a `version`
+    ├── skills/                  # the same 43 skills, flattened to skills/<name>/
+    └── com.github.copilot/
+        ├── commands/            # the same 50 commands
+        └── agents/              # 50 .agent.md personas
 ```
 
 `CLAUDE.md` and `AGENTS.md` at the plugin root are readable mirrors — a plugin cannot load either,
 so the always-on contract ships as the `ai-dev-team` skill instead.
+
+**Across editors**, the Copilot package is generated, so it is covered by the same rule: edit
+`claude/`, then re-run `scripts/build-copilot-plugin.py`. The generator is the only writer — it
+rebuilds `copilot/` from scratch on every run, so a hand edit there is lost rather than merged.
+`scripts/validate-framework.py` fails if the generated tree is stale, if the Copilot manifest
+declares an unsupported Agent Plugins version or an unknown top-level key, or if the counts
+documented above stop matching.
 
 **Via `install.sh`**, content is copied (or symlinked with `--link`) into the target scope. Only
 `skills/`, `commands/`, `templates/` and `workflow/` are deployed; the instructions file is

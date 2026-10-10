@@ -4,6 +4,21 @@ This file records all notable changes to the project. Versioning roughly follows
 
 ## [Unreleased]
 
+### Added
+- **VS Code / GitHub Copilot plugin packaging.** The framework was a Claude Code plugin only. It now ships a second package in the same repository, `copilot/`, built from `claude/` by `scripts/build-copilot-plugin.py`. It is an [Agent Plugins 1.0](https://agent-plugins.org) package, so it works in VS Code, the Copilot CLI, and any other client that reads that format. Installing it needs no installer: `copilot plugin marketplace add olehsvyrydov/AI-development-team`, then `copilot plugin install ai-dev-team`, or the marketplace in VS Code's `chat.plugins.marketplaces`.
+- **`copilot/com.github.copilot/agents/*.agent.md`** — one custom agent per persona alias (`max`, `jorge`, `finn` …), so the named personas are selectable from the agent dropdown, not only invocable by command. Copilot derives an agent's ID from its filename, so the alias is the agent: `claude/commands/max.md` becomes `max.agent.md` rather than a second definition of the Product Owner.
+- **`.github/plugin/marketplace.json`** — the catalogue in the location Copilot reads first. It points at `./copilot`; `.claude-plugin/marketplace.json` is untouched and still points at `./claude`.
+- **`scripts/build-copilot-plugin.py`** — the only writer of `copilot/`, which is gitignored because it is generated. It flattens `skills/<category>/…/<name>/SKILL.md` to `skills/<name>/` (Agent Plugins 1.0 resolves one level; this repository nests by category and by stack), copies `commands/` to `com.github.copilot/commands/`, and derives the agent files. Every skill's `references/` tree is copied verbatim, so the nested reference packs survive intact. It refuses to build — and names the file — if a skill directory does not match its frontmatter `name`, or if a name is not kebab-case, because Copilot skips such a skill silently.
+- **Gates G2b and G2c** in `scripts/validate-framework.py`. Agent Plugins 1.0 is a closed schema: declaring an unsupported version rejects the plugin outright, and an unknown top-level key is reported and *ignored*, which presents as "installed but no agents" rather than as a failure. The gate therefore pins `$schema` to 1.0.0, rejects unknown top-level keys, and fails when the generated tree is stale relative to `claude/`. G2c reads an explicit count marker in the README rather than pattern-matching prose — it matched prose first, and read "43 agent skills" as "43 agents", which is a different quantity.
+- **A `copilot-plugin` CI job** that builds the package, runs the gates against the built result, and rebuilds to confirm the output is byte-identical, so a build that reads state outside `claude/` fails rather than ships.
+
+### Changed
+- **`README.md`** — the install section gains the VS Code path and a table of the packaging differences between the two clients (plugin root, manifest, version, component directories). The "What Gets Installed" tree shows both package roots.
+
+### Notes
+- **The two clients need different version policies and now get them.** `claude/.claude-plugin/plugin.json` still omits `version` on purpose, so the commit SHA is the version and every push is an update; VS Code needs a concrete `version` to detect one, so the Copilot manifest carries it. Gate G2 keeps the ban on the Claude manifest.
+- **`install.sh` is unchanged and still supported.** It remains the path for Cursor and Kiro, and for VS Code users who prefer instructions-file over plugin.
+
 ## [5.3.0] — 2026-08-09
 
 Language expertise becomes a first-class layer. Four knowledge skills — Rust, SQL, Java,

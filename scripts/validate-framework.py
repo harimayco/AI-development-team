@@ -138,6 +138,127 @@ def gate_manifests() -> None:
     notes.append("G2 manifests: both parse, plugin.json has no version key")
 
 
+# --- G2b -- the Copilot manifest is a closed schema, and counts must match ----
+# Agent Plugins 1.0 declares `$schema`, so VS Code parses the manifest as that
+# version and REJECTS THE WHOLE PLUGIN for an unsupported one. Its top level is
+# closed: an unknown key (a legacy `skills`, or an `agents` that belongs under
+# `extensions`) is reported and ignored, which reads as "the plugin loaded but
+# has no agents" rather than as a failure. Both are silent, so both are checked.
+#
+# This runs against the GENERATED tree, not the source: the manifest is written
+# by scripts/build-copilot-plugin.py. Skipped when it has not been built.
+AGENT_PLUGIN_KEYS = {
+    "$schema",
+    "name",
+    "version",
+    "description",
+    "author",
+    "homepage",
+    "repository",
+    "license",
+    "keywords",
+    "extensions",
+}
+
+
+def gate_copilot_manifest() -> None:
+    manifest = ROOT / "copilot" / "plugin.json"
+    if not manifest.exists():
+        notes.append("G2b copilot manifest: copilot/ not generated, skipped")
+        return
+
+    try:
+        data = json.loads(read(manifest))
+    except json.JSONDecodeError as exc:
+        fail("G2b copilot manifest", f"copilot/plugin.json: invalid JSON -- {exc}")
+        return
+    if not isinstance(data, dict):
+        fail("G2b copilot manifest", "copilot/plugin.json: top level is not an object")
+        return
+
+    schema = str(data.get("$schema", ""))
+    if "agent-plugins.org/schemas/1.0.0/" not in schema:
+        fail(
+            "G2b copilot manifest",
+            f"copilot/plugin.json: $schema is {schema!r}. VS Code picks the manifest format "
+            f"from this, and an unsupported version rejects the plugin outright.",
+        )
+
+    for key in ("name", "version", "description"):
+        if not data.get(key):
+            fail("G2b copilot manifest", f"copilot/plugin.json: empty or missing '{key}'")
+
+    unknown = sorted(set(data) - AGENT_PLUGIN_KEYS)
+    if unknown:
+        fail(
+            "G2b copilot manifest",
+            f"copilot/plugin.json: unknown top-level key(s) {unknown}. Agent Plugins 1.0 is a "
+            f"closed schema -- these are ignored at load, so the component they name never "
+            f"appears. Copilot-specific components belong under 'extensions'.",
+        )
+
+    generated = sorted((ROOT / "copilot" / "skills").glob("*/SKILL.md"))
+    source = sorted(SKILLS.rglob("SKILL.md"))
+    if len(generated) != len(source):
+        fail(
+            "G2b copilot manifest",
+            f"copilot/ has {len(generated)} skills, claude/ has {len(source)} -- the generated "
+            f"tree is stale, re-run scripts/build-copilot-plugin.py",
+        )
+
+    commands = len(list((ROOT / "copilot" / "com.github.copilot" / "commands").glob("*.md")))
+    if commands != len(list(COMMANDS.glob("*.md"))):
+        fail("G2b copilot manifest", f"copilot/ has {commands} commands, claude/ has more")
+
+    notes.append(
+        f"G2b copilot manifest: $schema 1.0.0, {len(generated)} skills, {commands} commands"
+    )
+
+
+# --- G2c -- the published Copilot counts in the README stay honest -----------
+# G3 below only walks `claude/`. The Copilot package is installed by the user
+# rather than overlaid, so its numbers are separate and drift separately.
+#
+# This reads an explicitly marked line rather than pattern-matching prose. It
+# did match prose first, and matched "43 agent skills" as "43 agents" -- an
+# entirely different quantity -- because a regex cannot tell the two apart and
+# `\d+` is greedy while the word boundary is not.
+COPILOT_COUNTS = re.compile(
+    r"<!--\s*copilot-counts:\s*skills=(\d+)\s+agents=(\d+)\s+commands=(\d+)\s*-->"
+)
+
+
+def gate_copilot_counts() -> None:
+    if not (ROOT / "copilot").exists():
+        notes.append("G2c copilot counts: copilot/ not generated, skipped")
+        return
+    actual = {
+        "skills": len(list((ROOT / "copilot" / "skills").glob("*/SKILL.md"))),
+        "agents": len(list((ROOT / "copilot" / "com.github.copilot" / "agents").glob("*.agent.md"))),
+        "commands": len(list((ROOT / "copilot" / "com.github.copilot" / "commands").glob("*.md"))),
+    }
+    found = COPILOT_COUNTS.search(read(ROOT / "README.md"))
+    if not found:
+        fail(
+            "G2c copilot counts",
+            "README.md has no '<!-- copilot-counts: skills=N agents=N commands=N -->' marker, so "
+            "the numbers in the VS Code section are unverified.",
+        )
+        return
+    for kind, claimed in zip(("skills", "agents", "commands"), (int(g) for g in found.groups())):
+        if claimed != actual[kind]:
+            fail(
+                "G2c copilot counts",
+                f"README.md claims {claimed} Copilot {kind}, package has {actual[kind]} -- the "
+                f"marker is stale, re-run scripts/build-copilot-plugin.py",
+            )
+    notes.append(
+        f"G2c copilot counts: skills={actual['skills']} agents={actual['agents']} "
+        f"commands={actual['commands']}"
+    )
+
+
+
 # --- G3 -- documented counts equal the tree ----------------------------------
 # These drifted nine behind before anyone noticed, in four files at once.
 def gate_counts() -> None:
@@ -264,6 +385,8 @@ def main() -> int:
     for gate in (
         gate_frontmatter,
         gate_manifests,
+        gate_copilot_manifest,
+        gate_copilot_counts,
         gate_counts,
         gate_links,
         gate_credentials,
